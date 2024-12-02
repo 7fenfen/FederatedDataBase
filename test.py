@@ -4,7 +4,7 @@ import tenseal as ts
 # Step 1: 第一方创建加密环境并生成公钥和私钥
 context = ts.context(
     ts.SCHEME_TYPE.CKKS,
-    poly_modulus_degree=8192,
+    poly_modulus_degree=16384,
     coeff_mod_bit_sizes=[60, 40, 40, 60]
 )
 context.generate_galois_keys()
