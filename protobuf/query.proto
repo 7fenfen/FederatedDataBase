@@ -1,0 +1,55 @@
+/*构建方法
+python -m grpc_tools.protoc --proto_path=./proto --python_out=./DataBase --grpc_python_out=./DataBase query.proto
+*/
+
+syntax = "proto3";
+
+// 查询方式
+enum QueryType {
+    Nearest = 0; // 最近邻
+    AntiNearest = 1; // 反向最近邻
+}
+
+// 查询的请求
+message QueryRequest {
+    QueryType type = 1;
+    int32 position_x = 2;
+    int32 position_y = 3;
+    int32 query_num = 4;  // 查询的最近k个点
+}
+
+// 单个距离查询结果的数据结构
+message DisResult {
+    float distance = 5; // 与Q点的距离
+}
+
+// 距离查询响应
+message DisResponse {
+    repeated DisResult results = 1;
+}
+
+// 联邦数据库指示数据库返回 k个点的距离
+message NumRequest {
+    int32 need_num = 1;  // 查询返回的点的数
+}
+
+// 小型数据库返回的查询结果的数据结构
+message QueryResult {
+    int32 position_x = 1;
+    int32 position_y = 2;
+    int32 database_id = 3;
+}
+
+// 小型数据库返回的查询结果
+message QueryResponse {
+    repeated QueryResult results = 1;
+}
+
+
+// 服务定义
+service FederatedDatabaseService {
+    rpc QueryDistance (QueryRequest) returns (DisResponse);
+    rpc QueryNeedNum (NumRequest) returns (QueryResponse);
+}
+
+
