@@ -9,7 +9,7 @@
 
 ### 后端
 
-后端要求实现`FederatedServer.py`,`DatabaseServer.py`两个程序
+后端要求实现`FederationServer.py`,`DatabaseServer.py`两个程序
 
 分别实现**联邦数据库的服务端**以及每个独立的**数据库本体**
 
@@ -31,13 +31,13 @@
 2. 查询页面设计
 
    主要部分要求使用者填一个表,如`Check`信道所示,填表后点击按钮开始查询,进入结果页面
-   查询页面的侧边栏显示与当前联邦数据库链接的所有小型数据库服务器的地址,同时下方设按钮"添加数据库",见信道`Add`
+   查询页面的侧边栏显示与当前联邦数据库链接的所有小型数据库服务器的地址,同时下方设按钮"添加数据库",见信道`AddDatabase`
 
 3. 查询结果页面
 
    设计适当的容器显示查询结果,下设按钮"生成地图",展示一张以查询点为中心,其他点根据坐标分布在不同位置的地图,其中来自不同数据库的数据用不同颜色区分
 
-   可能使用信道`Map`让后端生成图片
+   可能使用信道`GenerateMap`让后端生成图片
 
 4. 实现信道`Check`,要求传入一个如下的message
    ```protobuf
@@ -98,7 +98,7 @@
        rpc GenerateMap (CheckResponse) returns (MapResponse);
    }
    ```
-   将protobuf文件命名为`check.proto`,注意编写完成后使用grpcio-tools构建生成`pb2`和`pb2_grpc`文件
+   将protobuf文件命名为`federation.proto`(表示服务端为federation),注意编写完成后使用grpcio-tools构建生成`pb2`和`pb2_grpc`文件
 
    然后在自己的程序中引用这两个文件实现功能,可以参照`FederatedQuery.py`和`DatabaseServer.py`两个文件进行构建
 
@@ -111,13 +111,13 @@ pip install flask grpcio grpcio-tools tenseal numpy
 
 ## 项目运行
 
-先运行`database.py`
+先运行`DatabaseServer.py`
 ```shell
 python DatabaseServer.py
 ```
-再运行`server.py`
+再运行`FederationQuery.py`
 ```shell
-python FederatedQuery.py
+python FederationQuery.py
 ```
 
 ## 目前的问题
