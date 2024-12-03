@@ -1,0 +1,22 @@
+/*
+此文件用于前端向后端的查询
+version 1.0_2412031218
+*/
+
+syntax = "proto3";
+
+// 请求消息
+message CheckRequest {
+  string address = 1;  // 地址字符串
+}
+
+// 响应消息
+message CheckResponse {
+  bool result = 1;  // 返回的结果
+}
+
+// 定义服务
+service CheckService {
+  // 检查地址是否无误
+  rpc check(CheckRequest) returns (CheckResponse);
+}
