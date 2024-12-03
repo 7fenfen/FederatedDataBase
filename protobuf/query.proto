@@ -4,7 +4,7 @@ python -m grpc_tools.protoc --proto_path=./proto --python_out=./DataBase --grpc_
 
 syntax = "proto3";
 
-// ======= 最近邻查询 =======
+// ======= 非加密最近邻查询 =======
 // 查询请求
 message NearestQueryRequest {
     int32 position_x = 1;
@@ -34,7 +34,7 @@ message AntiNearestQueryRequest {
     int32 position_y = 2;
 }
 
-// ======= 查询结果 =======
+// ======= 非加密查询结果 =======
 // 小型数据库返回的查询结果的数据结构
 message QueryResult {
     int32 position_x = 1;
@@ -47,6 +47,37 @@ message QueryResponse {
     repeated QueryResult results = 1;
 }
 
+// ======= 加密最近邻查询 =======
+// 查询请求
+message EncryptedNearestQueryRequest {
+    bytes context = 1;     // 加密环境
+    bytes position_x = 2;
+    bytes position_y = 3;
+    int32 query_num = 4;   // 查询的最近k个点
+}
+
+// 单个距离查询结果的数据结构
+message EncryptedDisResult {
+    bytes distance = 1;    // 与Q点的距离
+}
+
+// 距离查询响应
+message EncryptedDisResponse {
+    repeated EncryptedDisResult results = 1;
+}
+
+// ======= 加密查询结果 =======
+// 小型数据库返回的查询结果的数据结构
+message EncryptedQueryResult {
+    bytes position_x = 1;
+    bytes position_y = 2;
+    int32 database_id = 3;
+}
+
+// 小型数据库返回的查询结果
+message EncryptedQueryResponse {
+    repeated EncryptedQueryResult results = 1;
+}
 
 // 服务定义
 service FederatedDatabaseService {
@@ -55,6 +86,9 @@ service FederatedDatabaseService {
     rpc QueryNeedNum (NumRequest) returns (QueryResponse);
     // 反向最近邻查询的信道
     rpc AntiNearestQuery (AntiNearestQueryRequest) returns (QueryResponse);
+    // 加密最近邻查询的信道
+    rpc EncryptedQueryDistance (EncryptedNearestQueryRequest) returns (EncryptedDisResponse);
+    rpc EncryptedQueryNeedNum (NumRequest) returns (EncryptedQueryResponse);
 }
 
 
