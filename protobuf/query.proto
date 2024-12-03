@@ -4,23 +4,17 @@ python -m grpc_tools.protoc --proto_path=./proto --python_out=./DataBase --grpc_
 
 syntax = "proto3";
 
-// 查询方式
-enum QueryType {
-    Nearest = 0; // 最近邻
-    AntiNearest = 1; // 反向最近邻
-}
-
-// 查询的请求
-message QueryRequest {
-    QueryType type = 1;
-    int32 position_x = 2;
-    int32 position_y = 3;
-    int32 query_num = 4;  // 查询的最近k个点
+// ======= 最近邻查询 =======
+// 查询请求
+message NearestQueryRequest {
+    int32 position_x = 1;
+    int32 position_y = 2;
+    int32 query_num = 3;  // 查询的最近k个点
 }
 
 // 单个距离查询结果的数据结构
 message DisResult {
-    float distance = 5; // 与Q点的距离
+    float distance = 1; // 与Q点的距离
 }
 
 // 距离查询响应
@@ -33,6 +27,14 @@ message NumRequest {
     int32 need_num = 1;  // 查询返回的点的数
 }
 
+// ======= 反向最近邻查询 =======
+// 查询请求
+message AntiNearestQueryRequest {
+    int32 position_x = 1;
+    int32 position_y = 2;
+}
+
+// ======= 查询结果 =======
 // 小型数据库返回的查询结果的数据结构
 message QueryResult {
     int32 position_x = 1;
@@ -48,8 +50,11 @@ message QueryResponse {
 
 // 服务定义
 service FederatedDatabaseService {
-    rpc QueryDistance (QueryRequest) returns (DisResponse);
+    // 最近邻查询的信道
+    rpc QueryDistance (NearestQueryRequest) returns (DisResponse);
     rpc QueryNeedNum (NumRequest) returns (QueryResponse);
+    // 反向最近邻查询的信道
+    rpc AntiNearestQuery (AntiNearestQueryRequest) returns (QueryResponse);
 }
 
 
