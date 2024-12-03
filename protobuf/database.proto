@@ -112,15 +112,19 @@ message EncryptedQueryResponse {
 
 // ======= 服务定义 =======
 service DatabaseService {
+  // ======= federation向database发送的数据类型 =======
   // 最近邻查询的信道
   rpc QueryDistance (NearestQueryRequest) returns (DisResponse);
   rpc QueryNeedNum (NumRequest) returns (QueryResponse);
   // 反向最近邻查询的信道
   rpc AntiNearestQuery (AntiNearestQueryRequest) returns (QueryResponse);
-  rpc CompareQuery (CompareOtherDatabase) returns (CompareResponse);
   // 加密最近邻查询的信道
   rpc EncryptedQueryDistance (EncryptedNearestQueryRequest) returns (EncryptedDisResponse);
   rpc EncryptedQueryNeedNum (NumRequest) returns (EncryptedQueryResponse);
+
+  // ======= database向database发送的数据类型 =======
+  // 反向最近邻查询时用于跨数据库比较距离
+  rpc CompareQuery (CompareOtherDatabase) returns (CompareResponse);
 }
 
 

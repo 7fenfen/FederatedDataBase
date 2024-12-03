@@ -50,11 +50,6 @@ class DatabaseServiceStub(object):
                 request_serializer=database__pb2.AntiNearestQueryRequest.SerializeToString,
                 response_deserializer=database__pb2.QueryResponse.FromString,
                 _registered_method=True)
-        self.CompareQuery = channel.unary_unary(
-                '/DatabaseService/CompareQuery',
-                request_serializer=database__pb2.CompareOtherDatabase.SerializeToString,
-                response_deserializer=database__pb2.CompareResponse.FromString,
-                _registered_method=True)
         self.EncryptedQueryDistance = channel.unary_unary(
                 '/DatabaseService/EncryptedQueryDistance',
                 request_serializer=database__pb2.EncryptedNearestQueryRequest.SerializeToString,
@@ -65,6 +60,11 @@ class DatabaseServiceStub(object):
                 request_serializer=database__pb2.NumRequest.SerializeToString,
                 response_deserializer=database__pb2.EncryptedQueryResponse.FromString,
                 _registered_method=True)
+        self.CompareQuery = channel.unary_unary(
+                '/DatabaseService/CompareQuery',
+                request_serializer=database__pb2.CompareOtherDatabase.SerializeToString,
+                response_deserializer=database__pb2.CompareResponse.FromString,
+                _registered_method=True)
 
 
 class DatabaseServiceServicer(object):
@@ -72,7 +72,8 @@ class DatabaseServiceServicer(object):
     """
 
     def QueryDistance(self, request, context):
-        """最近邻查询的信道
+        """======= federation向database发送的数据类型 =======
+        最近邻查询的信道
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -91,12 +92,6 @@ class DatabaseServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def CompareQuery(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def EncryptedQueryDistance(self, request, context):
         """加密最近邻查询的信道
         """
@@ -106,6 +101,14 @@ class DatabaseServiceServicer(object):
 
     def EncryptedQueryNeedNum(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CompareQuery(self, request, context):
+        """======= database向database发送的数据类型 =======
+        反向最近邻查询时用于跨数据库比较距离
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -128,11 +131,6 @@ def add_DatabaseServiceServicer_to_server(servicer, server):
                     request_deserializer=database__pb2.AntiNearestQueryRequest.FromString,
                     response_serializer=database__pb2.QueryResponse.SerializeToString,
             ),
-            'CompareQuery': grpc.unary_unary_rpc_method_handler(
-                    servicer.CompareQuery,
-                    request_deserializer=database__pb2.CompareOtherDatabase.FromString,
-                    response_serializer=database__pb2.CompareResponse.SerializeToString,
-            ),
             'EncryptedQueryDistance': grpc.unary_unary_rpc_method_handler(
                     servicer.EncryptedQueryDistance,
                     request_deserializer=database__pb2.EncryptedNearestQueryRequest.FromString,
@@ -142,6 +140,11 @@ def add_DatabaseServiceServicer_to_server(servicer, server):
                     servicer.EncryptedQueryNeedNum,
                     request_deserializer=database__pb2.NumRequest.FromString,
                     response_serializer=database__pb2.EncryptedQueryResponse.SerializeToString,
+            ),
+            'CompareQuery': grpc.unary_unary_rpc_method_handler(
+                    servicer.CompareQuery,
+                    request_deserializer=database__pb2.CompareOtherDatabase.FromString,
+                    response_serializer=database__pb2.CompareResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -237,33 +240,6 @@ class DatabaseService(object):
             _registered_method=True)
 
     @staticmethod
-    def CompareQuery(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/DatabaseService/CompareQuery',
-            database__pb2.CompareOtherDatabase.SerializeToString,
-            database__pb2.CompareResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
     def EncryptedQueryDistance(request,
             target,
             options=(),
@@ -307,6 +283,33 @@ class DatabaseService(object):
             '/DatabaseService/EncryptedQueryNeedNum',
             database__pb2.NumRequest.SerializeToString,
             database__pb2.EncryptedQueryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CompareQuery(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/DatabaseService/CompareQuery',
+            database__pb2.CompareOtherDatabase.SerializeToString,
+            database__pb2.CompareResponse.FromString,
             options,
             channel_credentials,
             insecure,

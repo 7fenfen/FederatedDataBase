@@ -47,8 +47,23 @@ message MapResponse {
   bytes map = 1;                 // 序列化后的图片的二进制流,前端需要复原成图片
 }
 
-service FederatedService {
+// ======= 以下无需前端实现！ =======
+// 因为需要有database到federation的请求,所以把定义也放在这里
+// 加密后的两个距离
+message DistDiff {
+  bytes dis1 = 1;
+  bytes dis2 = 2;
+}
+// 服务端解密后比较大小,dis1<dis2返回0,反则返回1
+message DiffResponse {
+  bool cmp_result = 1;
+}
+
+service FederationService {
+  // 前端向federation发送的消息类型
   rpc Check (CheckRequest) returns (CheckResponse);
   rpc AddDatabase (AddRequest) returns (AddResponse);
   rpc GenerateMap (CheckResponse) returns (MapResponse);
+  // database向federation发送的消息类型
+  rpc CompareDist (DistDiff) returns (DiffResponse);
 }
