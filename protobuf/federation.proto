@@ -1,5 +1,9 @@
+/*文件说明
+定义了所有以federation为服务端的gRPC消息
+*/
+
 /*构建方法
-python -m grpc_tools.protoc --proto_path=./protobuf --python_out=./FederatedDataBase --grpc_python_out=./FederatedDataBase check.proto
+python -m grpc_tools.protoc --proto_path=./protobuf --python_out=./FederatedDataBase --grpc_python_out=./FederatedDataBase federation.proto
 */
 syntax = "proto3";
 

@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import check_pb2 as check__pb2
+import federation_pb2 as federation__pb2
 
 GRPC_GENERATED_VERSION = '1.68.0'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in check_pb2_grpc.py depends on'
+        + f' but the generated code in federation_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -36,18 +36,18 @@ class FederatedServiceStub(object):
         """
         self.Check = channel.unary_unary(
                 '/FederatedService/Check',
-                request_serializer=check__pb2.CheckRequest.SerializeToString,
-                response_deserializer=check__pb2.CheckResponse.FromString,
+                request_serializer=federation__pb2.CheckRequest.SerializeToString,
+                response_deserializer=federation__pb2.CheckResponse.FromString,
                 _registered_method=True)
         self.AddDatabase = channel.unary_unary(
                 '/FederatedService/AddDatabase',
-                request_serializer=check__pb2.AddRequest.SerializeToString,
-                response_deserializer=check__pb2.AddResponse.FromString,
+                request_serializer=federation__pb2.AddRequest.SerializeToString,
+                response_deserializer=federation__pb2.AddResponse.FromString,
                 _registered_method=True)
         self.GenerateMap = channel.unary_unary(
                 '/FederatedService/GenerateMap',
-                request_serializer=check__pb2.CheckResponse.SerializeToString,
-                response_deserializer=check__pb2.MapResponse.FromString,
+                request_serializer=federation__pb2.CheckResponse.SerializeToString,
+                response_deserializer=federation__pb2.MapResponse.FromString,
                 _registered_method=True)
 
 
@@ -77,18 +77,18 @@ def add_FederatedServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Check': grpc.unary_unary_rpc_method_handler(
                     servicer.Check,
-                    request_deserializer=check__pb2.CheckRequest.FromString,
-                    response_serializer=check__pb2.CheckResponse.SerializeToString,
+                    request_deserializer=federation__pb2.CheckRequest.FromString,
+                    response_serializer=federation__pb2.CheckResponse.SerializeToString,
             ),
             'AddDatabase': grpc.unary_unary_rpc_method_handler(
                     servicer.AddDatabase,
-                    request_deserializer=check__pb2.AddRequest.FromString,
-                    response_serializer=check__pb2.AddResponse.SerializeToString,
+                    request_deserializer=federation__pb2.AddRequest.FromString,
+                    response_serializer=federation__pb2.AddResponse.SerializeToString,
             ),
             'GenerateMap': grpc.unary_unary_rpc_method_handler(
                     servicer.GenerateMap,
-                    request_deserializer=check__pb2.CheckResponse.FromString,
-                    response_serializer=check__pb2.MapResponse.SerializeToString,
+                    request_deserializer=federation__pb2.CheckResponse.FromString,
+                    response_serializer=federation__pb2.MapResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -116,8 +116,8 @@ class FederatedService(object):
             request,
             target,
             '/FederatedService/Check',
-            check__pb2.CheckRequest.SerializeToString,
-            check__pb2.CheckResponse.FromString,
+            federation__pb2.CheckRequest.SerializeToString,
+            federation__pb2.CheckResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -143,8 +143,8 @@ class FederatedService(object):
             request,
             target,
             '/FederatedService/AddDatabase',
-            check__pb2.AddRequest.SerializeToString,
-            check__pb2.AddResponse.FromString,
+            federation__pb2.AddRequest.SerializeToString,
+            federation__pb2.AddResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -170,8 +170,8 @@ class FederatedService(object):
             request,
             target,
             '/FederatedService/GenerateMap',
-            check__pb2.CheckResponse.SerializeToString,
-            check__pb2.MapResponse.FromString,
+            federation__pb2.CheckResponse.SerializeToString,
+            federation__pb2.MapResponse.FromString,
             options,
             channel_credentials,
             insecure,
