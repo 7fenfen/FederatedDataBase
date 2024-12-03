@@ -22,7 +22,7 @@
 服务端再将结果返回给客户
 
 ### 前端
-基于`Flutter`框架进行搭建
+基于`Flutter`框架进行搭建,要求使用gRPC服务实现通信,可自行学习Dart如何配置gRPC
 #### ToDo List
 1. 主页面设计
 
@@ -30,38 +30,77 @@
 
 2. 查询页面设计
 
-   主要部分要求使用者填一个表,如`/check`路由所示,填表后点击按钮开始查询,进入结果页面
-   查询页面的侧边栏显示与当前联邦数据库链接的所有小型数据库服务器的地址,同时下方设按钮"添加数据库",见路由`/add`
+   主要部分要求使用者填一个表,如`Check`信道所示,填表后点击按钮开始查询,进入结果页面
+   查询页面的侧边栏显示与当前联邦数据库链接的所有小型数据库服务器的地址,同时下方设按钮"添加数据库",见信道`Add`
 
 3. 查询结果页面
 
    设计适当的容器显示查询结果,下设按钮"生成地图",展示一张以查询点为中心,其他点根据坐标分布在不同位置的地图,其中来自不同数据库的数据用不同颜色区分
-   
-   可能使用路由`/map`让后端生成图片
 
-4. 实现路由`/check`,要求传入一个如下的json数据
-   ```python
-   {
-      "query_type": 0,     # 查询类型的枚举,包括最近邻查询Nearest和反向最近邻查询AntiNearest
-      "position_x": 50,    # 待查点的横坐标
-      "position_y": 50,    # 待查点的纵坐标
-      "query_num":  10,    # 查询条数,最多为20,当query_type为反向最近邻时无需设置查询条数
-      "encrypt": 0         # 布尔型变量,表示是否加密,当query_type为反向最近邻时仅支持非加密查询
+   可能使用信道`Map`让后端生成图片
+
+4. 实现信道`Check`,要求传入一个如下的message
+   ```protobuf
+   enum QueryType {
+        Nearest = 0;
+        AntiNearest = 1;
+   }
+   message CheckRequest {
+       QueryType query_type = 1;     // 查询类型的枚举,包括最近邻查询Nearest和反向最近邻查询AntiNearest
+       int32 position_x = 2;         // 待查点的横坐标
+       int32 position_y = 3;         // 待查点的纵坐标
+       int32 query_num = 4;          // 查询条数,最多为20,当query_type为反向最近邻时无需设置查询条数
+       bool encrypt = 5;             // 布尔型变量,表示是否加密,当query_type为反向最近邻时仅支持非加密查询
    }
    ```
-   后端返回一个容量为query_num的列表,列表元素为如下字典
-   ```python
-   {
-    "position_x": 49,  # 查询结果的横坐标
-    "position_y": 51,  # 查询结果的纵坐标
-    "database_id": 1   # 查询结果所属数据库的id
+   后端返回一个容量为query_num的message,如下
+
+   ```protobuf
+   message CheckResult {
+       int32 position_x = 1;
+       int32 position_y = 2;
+       int32 database_id = 3;
    }
-   ```
    
-5. 路由`/add`
+   message CheckResponse {
+       repeated CheckResult results = 1;
+   }
+   ```
+
+5. 信道`AddDatabase`
    传入表示数据库服务器地址的字符串,后端返回Success或Fail
-6. 路由`/map`
+   ```protobuf
+   message AddRequest {
+       string address = 1;
+   }
+   
+   enum AddResult {
+       Fail = 0;
+       Success = 1;
+   }
+   
+   message AddResponse {
+       AddResult add_result = 1;
+   }
+   ```
+6. 信道`GenerateMap`
    传入查询结果列表,返回坐标图
+   ```protobuf
+   message MapResponse {
+       bytes map = 1;      // 序列化后的图片的二进制流,前端需要复原成图片
+   }
+   ```
+7. 定义服务`FederatedService`
+   ```protobuf
+   service FederatedService {
+       rpc Check (CheckRequest) returns (CheckResponse);
+       rpc AddDatabase (AddRequest) returns (AddResponse);
+       rpc GenerateMap (CheckResponse) returns (MapResponse);
+   }
+   ```
+   将protobuf文件命名为`check.proto`,注意编写完成后使用grpcio-tools构建生成`pb2`和`pb2_grpc`文件
+
+   然后在自己的程序中引用这两个文件实现功能,可以参照`FederatedQuery.py`和`DatabaseServer.py`两个文件进行构建
 
 ## 项目依赖
 
