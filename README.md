@@ -45,7 +45,7 @@
       "query_type": 0,     # 查询类型的枚举,包括最近邻查询Nearest和反向最近邻查询AntiNearest
       "position_x": 50,    # 待查点的横坐标
       "position_y": 50,    # 待查点的纵坐标
-      "query_num":  10,    # 查询条数,最多为20
+      "query_num":  10,    # 查询条数,最多为20,当query_type为反向最近邻时无需设置查询条数
       "encrypt": 0         # 布尔型变量,表示是否加密,当query_type为反向最近邻时仅支持非加密查询
    }
    ```
