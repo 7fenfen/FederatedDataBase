@@ -1,0 +1,130 @@
+import grpc
+import database_pb2, database_pb2_grpc
+import tenseal as ts
+
+class FederationQuery:
+    def __init__(self, addresses):
+        self.addresses = addresses
+        self.small_databases = self.stub_init()
+
+    def stub_init(self):
+        stubs = []
+        for address in self.addresses:
+            channel = grpc.insecure_channel(address)
+            stubs.append(database_pb2_grpc.DatabaseServiceStub(channel))
+
+        return stubs
+
+    def nearest_query(self, query_x, query_y, query_num):
+        distances = []
+
+        # 向每个小型数据库发送查询请求，获取k个点的距离
+        for db_stub in self.small_databases:
+            response = db_stub.QueryDistance(
+                database_pb2.NearestQueryRequest(
+                    position_x=query_x,
+                    position_y=query_y,
+                    query_num=query_num))
+            # 将返回的距离加入列表
+            for dis_result in response.results:
+                distances.append((dis_result.distance, db_stub))
+
+        # 根据距离排序，选择最接近的k个点
+        distances.sort(key=lambda x: x[0])
+        nearest_results = distances[:query_num]
+
+        # 计算每个数据库应该返回多少个点
+        db_counts = {db_stub: 0 for db_stub in self.small_databases}
+        for _, db_stub in nearest_results:
+            db_counts[db_stub] += 1
+
+        # 向小型数据库发送请求，请求返回相应数量的点
+        final_results = []
+        for db_stub, count in db_counts.items():
+            if count > 0:
+                response = db_stub.QueryNeedNum(database_pb2.NumRequest(need_num=count))
+                final_results.extend(response.results)
+
+        return final_results
+
+    def anti_nearest_query(self, query_x, query_y):
+        final_results = []
+        # 向每个小型数据库发送查询请求，获取全部的以所查点为最近邻的点
+        for db_stub in self.small_databases:
+            response = db_stub.AntiNearestQuery(
+                database_pb2.AntiNearestQueryRequest(
+                    position_x=query_x,
+                    position_y=query_y))
+            final_results.extend(response.results)
+        return final_results
+
+    def encrypted_nearest_query(self, received_context, query_x, query_y, query_num):
+        # 创建加密环境
+        context = ts.context_from(received_context)
+        # 加密数据
+        enc_query_x = ts.ckks_vector(context, query_x)
+        enc_query_y = ts.ckks_vector(context, query_y)
+
+        # 创建结果列表
+        distances = []
+
+        # 向每个小型数据库发送查询请求，获取k个点的距离
+        for db_stub in self.small_databases:
+            response = db_stub.EncryptedQueryDistance(
+                database_pb2.EncryptedNearestQueryRequest(
+                    context=received_context,       # 二进制流
+                    position_x=enc_query_x,
+                    position_y=enc_query_y,
+                    query_num=query_num))
+            for dis_result in response.results:
+                # 将序列化的结果变成密文并解密
+                dec_dis_result = ts.ckks_vector_from(context, dis_result.distance).decrypt()
+                # 将返回的距离加入列表
+                distances.append((dec_dis_result, db_stub))
+
+        # 根据距离排序，选择最接近的k个点
+        distances.sort(key=lambda x: x[0])
+        nearest_results = distances[:query_num]
+
+        # 计算每个数据库应该返回多少个点
+        db_counts = {db_stub: 0 for db_stub in self.small_databases}
+        for _, db_stub in nearest_results:
+            db_counts[db_stub] += 1
+
+        # 向小型数据库发送请求，请求返回相应数量的点
+        final_results = []
+        for db_stub, count in db_counts.items():
+            if count > 0:
+                response = db_stub.QueryNeedNum(database_pb2.NumRequest(need_num=count))
+                for result in response.results:
+                    # 将序列化的结果变成密文并解密
+                    dec_position_x = ts.ckks_vector_from(context, result.position_x).decrypt()
+                    dec_position_y = ts.ckks_vector_from(context, result.position_y).decrypt()
+                    # 将最终结果加入列表
+                    final_results = [].append((dec_position_x, dec_position_y, result.database_id))
+        return final_results
+
+
+def test():
+    federated_query = FederationQuery(["localhost:50051", "localhost:50052", "localhost:50053"])
+
+    # 查询并返回最接近的k个点
+    # test1
+    results = federated_query.nearest_query(50, 50, 5)
+    print(f"Query Type: Nearest, X:50, Y:50, QueryNum:5")
+    for result in results:
+        print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+    # test2
+    results = federated_query.nearest_query(50, 50, 10)
+    print(f"Query Type: Nearest, X:50, Y:50, QueryNum:10")
+    for result in results:
+        print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+    # test3
+    results = federated_query.nearest_query(30, 30, 5)
+    print(f"Query Type: Nearest, X:30, Y:30, QueryNum:5")
+    for result in results:
+        print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+
+
+if __name__ == '__main__':
+    test()
