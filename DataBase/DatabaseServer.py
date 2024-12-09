@@ -1,21 +1,44 @@
 import grpc
-from concurrent import futures  # 修改为正确的导入方式
-from google.protobuf import empty_pb2
-import query_pb2
-import query_pb2_grpc
+from concurrent import futures
+import database_pb2
+import database_pb2_grpc
+import federation_pb2
+import federation_pb2_grpc
 from threading import Thread
 import random
 import math
+import tenseal as ts
 
-
-class FederatedDatabaseServiceServicer(query_pb2_grpc.FederatedDatabaseServiceServicer):
-    def __init__(self, database_id, data_size=100):
+class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
+    def __init__(self, database_id, other_database_address, data_size=100 ):
         self.database_id = database_id
+        self.other_database_address = other_database_address
+        self.other_database = self.stub_init()
+        self.context = self.create_context()
         # 模拟数据库内的点 (user_id, position_x, position_y)
         self.data = [(i, random.randint(0, 100), random.randint(0, 100)) for i in range(data_size)]
         self.distances = []  # 用来存储到查询点的距离（第一次查询时计算）
 
-    def calculate_distance(self, x1, y1, x2, y2):
+    def stub_init(self):
+        stubs = []
+        for address in self.other_database_address:
+            channel = grpc.insecure_channel(address)
+            stubs.append(database_pb2_grpc.DatabaseServiceStub(channel))
+
+        return stubs
+
+    @staticmethod
+    def create_context():
+        context = ts.context(
+            ts.SCHEME_TYPE.CKKS,
+            poly_modulus_degree=16384,
+            coeff_mod_bit_sizes=[60, 40, 40, 60]
+        )
+        context.generate_galois_keys()
+        context.global_scale = 2 ** 40
+        return context
+    @staticmethod
+    def calculate_distance(x1, y1, x2, y2):
         return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
     def QueryDistance(self, request, context):
@@ -32,11 +55,11 @@ class FederatedDatabaseServiceServicer(query_pb2_grpc.FederatedDatabaseServiceSe
         self.distances.sort(key=lambda x: x[0])
 
         # 返回前query_num个距离
-        nearest_distances = [query_pb2.DisResult(
+        nearest_distances = [database_pb2.DisResult(
             distance=distance)
             for distance, _, _, _ in self.distances[:query_num]]
 
-        return query_pb2.DisResponse(results=nearest_distances)
+        return database_pb2.DisResponse(results=nearest_distances)
 
     def QueryNeedNum(self, request, context):
         num_points = request.need_num
@@ -44,9 +67,8 @@ class FederatedDatabaseServiceServicer(query_pb2_grpc.FederatedDatabaseServiceSe
         # 直接根据已排序的距离列表返回最接近的num_points个点
         nearest_points = self.distances[:num_points]
 
-        # 使用通用格式化函数构造返回结果
         results = [
-            query_pb2.QueryResult(
+            database_pb2.QueryResult(
                 position_x=x,
                 position_y=y,
                 database_id=self.database_id
@@ -56,15 +78,53 @@ class FederatedDatabaseServiceServicer(query_pb2_grpc.FederatedDatabaseServiceSe
 
         # 清空 distances，以便下一次查询时可以重新计算
         self.distances = []
+        return database_pb2.QueryResponse(results=results)
 
-        return query_pb2.QueryResponse(results=results)
+    def AntiNearestQuery(self, request, context):
+        temp_result = []
+        query_x = request.position_x
+        query_y = request.position_y
+        # 看有没有以查询点为最小最近邻的点
+        for _, x, y, min_dis in self.data:
+            dis = self.calculate_distance(query_x, query_y, x, y)
+            if dis < min_dis:
+                temp_result.append((x,y,dis))
+        # 序列化加密环境
+        serialized_context = self.context.serialize()
+        # 与其它数据库比较
+        for item in temp_result:
+            # 加密数据
+            enc_position_x = ts.ckks_vector(context, item[0])
+            enc_position_y = ts.ckks_vector(context, item[1])
+            enc_min_dis = item[2]
+            # 创建结果列表
+            result = []
+            for stub in self.other_database:
+                response = stub.CompareQuery(
+                    database_pb2.CompareOtherDatabase(
+                        context = serialized_context,
+                        position_x = enc_position_x,
+                        position_y = enc_position_y,
+                        min_dis = enc_min_dis
+                    )
+                )
+                result.append(response)
+
+
+    def EncryptedQueryDistance(self, request, context):
+
+    def EncryptedQueryNeedNum(self, request, context):
+
+    def CompareQuery(self, request, context):
+
+
 
 
 def serve(database_id, port, data_size):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     # 添加查询服务
-    query_pb2_grpc.add_FederatedDatabaseServiceServicer_to_server(
-        FederatedDatabaseServiceServicer(database_id, data_size), server)
+    database_pb2_grpc.add_DatabaseServiceServicer_to_server(
+        DatabaseServiceServicer(database_id, data_size), server)
     # 监听端口
     server.add_insecure_port(f'[::]:{port}')
     print(f"Server {database_id} started on ports {port} \n")
