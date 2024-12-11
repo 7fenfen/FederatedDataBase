@@ -8,6 +8,7 @@ import federation_pb2_grpc
 import mysql.connector
 from mysql.connector import Error
 from FederationQuery import FederationQuery
+import tenseal as ts
 
 federated_config = {
     'host': '112.4.115.127',
@@ -30,7 +31,8 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         except Error as e:
             print("Error while connecting to MySQL", e)
         # 初始化查询工具类
-        self.querier = FederationQuery(self.database_address)
+        self.context = self.generate_encrypt_context()
+        self.querier = FederationQuery(self.database_address, self.context)
 
     def get_database_address(self):
         try:
@@ -47,6 +49,17 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
             return results
         except Error as e:
             print("Error while connecting to MySQL", e)
+
+    @staticmethod
+    def generate_encrypt_context():
+        context = ts.context(
+            ts.SCHEME_TYPE.CKKS,
+            poly_modulus_degree=16384,
+            coeff_mod_bit_sizes=[60, 40, 40, 60]
+        )
+        context.generate_galois_keys()
+        context.global_scale = 2 ** 40
+        return context
 
     def Check(self, request, context):
         """处理Check请求"""

@@ -2,10 +2,12 @@ import grpc
 import database_pb2, database_pb2_grpc
 import tenseal as ts
 
+
 class FederationQuery:
-    def __init__(self, addresses):
+    def __init__(self, addresses, context):
         self.addresses = addresses
         self.small_databases = self.stub_init()
+        self.context = context
 
     def stub_init(self):
         stubs = []
@@ -58,12 +60,12 @@ class FederationQuery:
             final_results.extend(response.results)
         return final_results
 
-    def encrypted_nearest_query(self, received_context, query_x, query_y, query_num):
-        # 创建加密环境
-        context = ts.context_from(received_context)
+    def encrypted_nearest_query(self, query_x, query_y, query_num):
+        # 序列化加密环境
+        serialized_context = self.context.serialize()
         # 加密数据
-        enc_query_x = ts.ckks_vector(context, query_x)
-        enc_query_y = ts.ckks_vector(context, query_y)
+        enc_query_x = ts.ckks_vector(self.context, query_x)
+        enc_query_y = ts.ckks_vector(self.context, query_y)
 
         # 创建结果列表
         distances = []
@@ -72,13 +74,13 @@ class FederationQuery:
         for db_stub in self.small_databases:
             response = db_stub.EncryptedQueryDistance(
                 database_pb2.EncryptedNearestQueryRequest(
-                    context=received_context,       # 二进制流
+                    context=serialized_context,  # 二进制流
                     position_x=enc_query_x,
                     position_y=enc_query_y,
                     query_num=query_num))
             for dis_result in response.results:
                 # 将序列化的结果变成密文并解密
-                dec_dis_result = ts.ckks_vector_from(context, dis_result.distance).decrypt()
+                dec_dis_result = ts.ckks_vector_from(self.context, dis_result.distance).decrypt()
                 # 将返回的距离加入列表
                 distances.append((dec_dis_result, db_stub))
 
@@ -98,8 +100,8 @@ class FederationQuery:
                 response = db_stub.QueryNeedNum(database_pb2.NumRequest(need_num=count))
                 for result in response.results:
                     # 将序列化的结果变成密文并解密
-                    dec_position_x = ts.ckks_vector_from(context, result.position_x).decrypt()
-                    dec_position_y = ts.ckks_vector_from(context, result.position_y).decrypt()
+                    dec_position_x = ts.ckks_vector_from(self.context, result.position_x).decrypt()
+                    dec_position_y = ts.ckks_vector_from(self.context, result.position_y).decrypt()
                     # 将最终结果加入列表
                     final_results = [].append((dec_position_x, dec_position_y, result.database_id))
         return final_results

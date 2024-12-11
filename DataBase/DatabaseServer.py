@@ -9,8 +9,9 @@ import random
 import math
 import tenseal as ts
 
+
 class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
-    def __init__(self, database_id, other_database_address, data_size=100 ):
+    def __init__(self, database_id, other_database_address, data_size=100):
         self.database_id = database_id
         self.other_database_address = other_database_address
         self.other_database = self.stub_init()
@@ -18,6 +19,9 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         # 模拟数据库内的点 (user_id, position_x, position_y)
         self.data = [(i, random.randint(0, 100), random.randint(0, 100)) for i in range(data_size)]
         self.distances = []  # 用来存储到查询点的距离（第一次查询时计算）
+        self.enc_distances = []  # 用来存储到查询点的加密距离（第一次查询时计算）
+        # 建立与联邦端的信道
+        self.stub = federation_pb2_grpc.FederationServiceStub(grpc.insecure_channel("localhost:50051"))
 
     def stub_init(self):
         stubs = []
@@ -37,9 +41,29 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         context.generate_galois_keys()
         context.global_scale = 2 ** 40
         return context
+
     @staticmethod
     def calculate_distance(x1, y1, x2, y2):
-        return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        return (x1 - x2) ** 2 + (y1 - y2) ** 2
+
+    def encrypt_compare(self, x1, x2):
+        result = self.stub.CompareDist(
+            federation_pb2.DistDiff(
+                dis1=x1,
+                dis2=x2,
+            )
+        )
+        return result
+
+    def encrypt_sort(self, enc_array):
+        n = len(enc_array)
+        for i in range(n):
+            for j in range(0, n - i - 1):
+                # 使用自定义比较函数
+                if self.encrypt_compare(enc_array[j][0], enc_array[j + 1][0]) > 0:
+                    # 交换位置
+                    enc_array[j], enc_array[j + 1] = enc_array[j + 1], enc_array[j]
+        return enc_array
 
     def QueryDistance(self, request, context):
         query_x = request.position_x
@@ -88,7 +112,7 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         for _, x, y, min_dis in self.data:
             dis = self.calculate_distance(query_x, query_y, x, y)
             if dis < min_dis:
-                temp_result.append((x,y,dis))
+                temp_result.append((x, y, dis))
         # 序列化加密环境
         serialized_context = self.context.serialize()
         # 与其它数据库比较
@@ -102,22 +126,49 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
             for stub in self.other_database:
                 response = stub.CompareQuery(
                     database_pb2.CompareOtherDatabase(
-                        context = serialized_context,
-                        position_x = enc_position_x,
-                        position_y = enc_position_y,
-                        min_dis = enc_min_dis
+                        context=serialized_context,
+                        position_x=enc_position_x,
+                        position_y=enc_position_y,
+                        min_dis=enc_min_dis
                     )
                 )
                 result.append(response)
 
-
     def EncryptedQueryDistance(self, request, context):
+        # 接收数据
+        received_context = request.context  # 序列化的加密环境
+        # 还原加密环境
+        database_party_context = ts.context_from(received_context)
+        # 把数据加载到新的加密环境
+        enc_query_x = ts.ckks_vector_from(database_party_context, request.position_x)
+        enc_query_y = ts.ckks_vector_from(database_party_context, request.position_y)
+        query_num = request.query_num
+
+        self.enc_distances = []  # 清空距离数据
+
+        for user_id, x, y in self.data:
+            # 加密x,y
+            enc_x = ts.ckks_vector(database_party_context, x)
+            enc_y = ts.ckks_vector(database_party_context, y)
+            # 计算距离(加密后)
+            distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
+            serialized_distance = distance.serialize()
+            # 加入列表
+            self.enc_distances.append((serialized_distance, user_id, x, y))
+
+        # 按照距离升序排序
+        self.encrypt_sort(self.enc_distances)
+
+        # 返回前query_num个距离
+        nearest_distances = [database_pb2.EncryptedDisResult(
+            distance=distance)
+            for distance, _, _, _ in self.enc_distances[:query_num]]
+
+        return database_pb2.EncryptedDisResponse(results=nearest_distances)
 
     def EncryptedQueryNeedNum(self, request, context):
 
     def CompareQuery(self, request, context):
-
-
 
 
 def serve(database_id, port, data_size):
