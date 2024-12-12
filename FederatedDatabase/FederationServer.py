@@ -62,9 +62,30 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         return context
 
     def Check(self, request, context):
-        """处理Check请求"""
-        # TODO: 实现函数逻辑
-        return federation_pb2.CheckResponse()
+        # 接受数据
+        query_type = request.query_type
+        position_x = request.position_x
+        position_y = request.position_y
+        query_num = request.query_num
+        encrypt = request.encrypt
+        results = []
+        final_results = []
+        if query_type == federation_pb2.Nearest:
+            if not encrypt:
+                results = self.querier.nearest_query(position_x, position_y, query_num)
+            else:
+                results = self.querier.encrypted_nearest_query(position_x, position_y, query_num)
+        else:
+            results = self.querier.anti_nearest_query(position_x, position_y)
+        for result in results:
+            final_results.append(federation_pb2.CheckResult(
+                position_x=result.position_x,
+                position_y=result.position_y,
+                database_id=result.database_id))
+
+        return federation_pb2.CheckResponse(
+            results=final_results,
+        )
 
     def AddDatabase(self, request, context):
         """处理AddDatabase请求"""

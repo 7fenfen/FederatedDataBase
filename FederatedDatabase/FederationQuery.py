@@ -64,8 +64,8 @@ class FederationQuery:
         # 序列化加密环境
         serialized_context = self.context.serialize()
         # 加密数据
-        enc_query_x = ts.ckks_vector(self.context, query_x)
-        enc_query_y = ts.ckks_vector(self.context, query_y)
+        enc_query_x = ts.ckks_vector(self.context, query_x).serialize()
+        enc_query_y = ts.ckks_vector(self.context, query_y).serialize()
 
         # 创建结果列表
         distances = []

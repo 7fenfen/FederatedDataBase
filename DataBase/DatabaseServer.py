@@ -139,9 +139,9 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
                 results.extend(response)
             flag = False
             for result in results:
-                dis_diff = ts.ckks_vector_from(self.context, result[0])
+                dis_diff = ts.ckks_vector_from(self.context, result.dis_diff)
                 # 调试后参照返回的格式再进行修改
-                if dis_diff.decrypt() < 0:
+                if dis_diff.decrypt()[0] < 0:
                     flag = True
             if not flag:
                 final_result.append(item)
