@@ -69,8 +69,8 @@ class FederationQuery:
         # 序列化加密环境
         serialized_context = self.context.serialize()
         # 加密数据
-        enc_query_x = ts.ckks_vector(self.context, query_x).serialize()
-        enc_query_y = ts.ckks_vector(self.context, query_y).serialize()
+        enc_query_x = ts.ckks_vector(self.context, [query_x]).serialize()
+        enc_query_y = ts.ckks_vector(self.context, [query_y]).serialize()
 
         # 创建结果列表
         distances = []
@@ -87,7 +87,7 @@ class FederationQuery:
                 # 将序列化的结果变成密文并解密
                 dec_dis_result = ts.ckks_vector_from(self.context, dis_result.distance).decrypt()
                 # 将返回的距离加入列表
-                distances.append((dec_dis_result, db_stub))
+                distances.append((dec_dis_result[0], db_stub))  # 注意解密后结果为一个向量
 
         # 根据距离排序，选择最接近的k个点
         distances.sort(key=lambda x: x[0])
@@ -102,24 +102,25 @@ class FederationQuery:
         final_results = []
         for db_stub, count in db_counts.items():
             if count > 0:
-                response = db_stub.QueryNeedNum(database_pb2.NumRequest(need_num=count))
+                response = db_stub.EncryptedQueryNeedNum(
+                    database_pb2.NumRequest(need_num=count))
                 for result in response.results:
                     # 将序列化的结果变成密文并解密
                     dec_position_x = ts.ckks_vector_from(self.context, result.position_x).decrypt()
                     dec_position_y = ts.ckks_vector_from(self.context, result.position_y).decrypt()
                     # 将最终结果加入列表
-                    final_results = [].append((dec_position_x, dec_position_y, result.database_id))
+                    final_results.append((dec_position_x[0], dec_position_y[0], result.database_id))
         return final_results
 
 
 def test():
     context = ts.context(
             ts.SCHEME_TYPE.CKKS,
-            poly_modulus_degree=16384,
-            coeff_mod_bit_sizes=[60, 40, 40, 60]
+            poly_modulus_degree=8192,
+            coeff_mod_bit_sizes=[40, 21, 21, 40]
         )
     context.generate_galois_keys()
-    context.global_scale = 2 ** 40
+    context.global_scale = 2 ** 21
     federated_query = FederationQuery(["localhost:60051", "localhost:60052", "localhost:60053"], context)
 
     # test1,非加密最近邻
@@ -132,6 +133,11 @@ def test():
     print(f"Query Type: AntiNearest, X:50, Y:50")
     for result in results:
         print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+    # test1,加密最近邻
+    results = federated_query.encrypted_nearest_query(150, 150, 5)
+    print(f"Query Type: EncryptedNearest, X:150, Y:150, QueryNum:5")
+    for result in results:
+        print(f"User at ({result[0]}, {result[1]}) from Database {result[2]}")
 
 
 if __name__ == '__main__':
