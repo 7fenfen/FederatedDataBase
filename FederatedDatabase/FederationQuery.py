@@ -11,8 +11,13 @@ class FederationQuery:
 
     def stub_init(self):
         stubs = []
+        max_msg_size = 100 * 1024 * 1024  # 设置为 100MB
+        options = [
+            ('grpc.max_send_message_length', max_msg_size),
+            ('grpc.max_receive_message_length', max_msg_size),
+        ]
         for address in self.addresses:
-            channel = grpc.insecure_channel(address)
+            channel = grpc.insecure_channel(address, options=options)
             stubs.append(database_pb2_grpc.DatabaseServiceStub(channel))
 
         return stubs
@@ -108,22 +113,23 @@ class FederationQuery:
 
 
 def test():
-    federated_query = FederationQuery(["localhost:50051", "localhost:50052", "localhost:50053"])
+    context = ts.context(
+            ts.SCHEME_TYPE.CKKS,
+            poly_modulus_degree=16384,
+            coeff_mod_bit_sizes=[60, 40, 40, 60]
+        )
+    context.generate_galois_keys()
+    context.global_scale = 2 ** 40
+    federated_query = FederationQuery(["localhost:60051", "localhost:60052", "localhost:60053"], context)
 
-    # 查询并返回最接近的k个点
-    # test1
-    results = federated_query.nearest_query(50, 50, 5)
-    print(f"Query Type: Nearest, X:50, Y:50, QueryNum:5")
+    # test1,非加密最近邻
+    results = federated_query.nearest_query(150, 150, 5)
+    print(f"Query Type: Nearest, X:150, Y:150, QueryNum:5")
     for result in results:
         print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
-    # test2
-    results = federated_query.nearest_query(50, 50, 10)
-    print(f"Query Type: Nearest, X:50, Y:50, QueryNum:10")
-    for result in results:
-        print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
-    # test3
-    results = federated_query.nearest_query(30, 30, 5)
-    print(f"Query Type: Nearest, X:30, Y:30, QueryNum:5")
+    # test2,非加密反向最近邻
+    results = federated_query.anti_nearest_query(50, 50)
+    print(f"Query Type: AntiNearest, X:50, Y:50")
     for result in results:
         print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
 
