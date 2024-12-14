@@ -54,11 +54,11 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
     def generate_encrypt_context():
         context = ts.context(
             ts.SCHEME_TYPE.CKKS,
-            poly_modulus_degree=16384,
-            coeff_mod_bit_sizes=[60, 40, 40, 60]
+            poly_modulus_degree=8192,
+            coeff_mod_bit_sizes=[40, 21, 21, 40]
         )
         context.generate_galois_keys()
-        context.global_scale = 2 ** 40
+        context.global_scale = 2 ** 21
         return context
 
     def Check(self, request, context):
@@ -68,7 +68,6 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         position_y = request.position_y
         query_num = request.query_num
         encrypt = request.encrypt
-        results = []
         final_results = []
         if query_type == federation_pb2.Nearest:
             if not encrypt:
@@ -96,6 +95,19 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         """处理GenerateMap请求"""
         # TODO: 实现函数逻辑
         return federation_pb2.MapResponse()
+
+    def CompareDist(self, request, context):
+        dis1 = ts.ckks_vector_from(self.context, request.dis1).decrypt()
+        dis2 = ts.ckks_vector_from(self.context, request.dis2).decrypt()
+        # 注意解密后的结果为一个向量
+        if dis1[0] > dis2[0]:
+            answer = True
+        else:
+            answer = False
+        # 返回比较结果
+        return federation_pb2.DiffResponse(
+            cmp_result=answer
+        )
 
 
 def serve():
