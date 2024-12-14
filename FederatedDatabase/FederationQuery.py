@@ -1,6 +1,7 @@
 import grpc
 import database_pb2, database_pb2_grpc
 import tenseal as ts
+import time
 
 
 class FederationQuery:
@@ -109,35 +110,45 @@ class FederationQuery:
                     dec_position_x = ts.ckks_vector_from(self.context, result.position_x).decrypt()
                     dec_position_y = ts.ckks_vector_from(self.context, result.position_y).decrypt()
                     # 将最终结果加入列表
-                    final_results.append((dec_position_x[0], dec_position_y[0], result.database_id))
+                    final_results.append((dec_position_x[0] * 100, dec_position_y[0] * 100, result.database_id))
         return final_results
 
 
 def test():
     context = ts.context(
-            ts.SCHEME_TYPE.CKKS,
-            poly_modulus_degree=8192,
-            coeff_mod_bit_sizes=[40, 21, 21, 40]
-        )
+        ts.SCHEME_TYPE.CKKS,
+        poly_modulus_degree=8192,
+        coeff_mod_bit_sizes=[40, 21, 21, 40]
+    )
     context.generate_galois_keys()
     context.global_scale = 2 ** 21
     federated_query = FederationQuery(["localhost:60051", "localhost:60052", "localhost:60053"], context)
 
     # test1,非加密最近邻
-    results = federated_query.nearest_query(150, 150, 5)
-    print(f"Query Type: Nearest, X:150, Y:150, QueryNum:5")
+    time1 = time.time()
+    results = federated_query.nearest_query(150, 150, 10)
+    print(f"Query Type: Nearest, X:150, Y:150, QueryNum:10")
     for result in results:
         print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+    time2 = time.time()
+    elapsed_time1 = time2 - time1
+    print(f"程序运行时间: {elapsed_time1:.6f} 秒")
     # test2,非加密反向最近邻
-    results = federated_query.anti_nearest_query(50, 50)
-    print(f"Query Type: AntiNearest, X:50, Y:50")
+    results = federated_query.anti_nearest_query(100, 100)
+    print(f"Query Type: AntiNearest, X:100, Y:100")
     for result in results:
         print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+    time3 = time.time()
+    elapsed_time2 = time3 - time2
+    print(f"程序运行时间: {elapsed_time2:.6f} 秒")
     # test1,加密最近邻
     results = federated_query.encrypted_nearest_query(150, 150, 5)
     print(f"Query Type: EncryptedNearest, X:150, Y:150, QueryNum:5")
     for result in results:
-        print(f"User at ({result[0]}, {result[1]}) from Database {result[2]}")
+        print("User at ({:.2f}, {:.2f}) from Database {}".format(result[0], result[1], result[2]))
+    time4 = time.time()
+    elapsed_time3 = time4 - time3
+    print(f"程序运行时间: {elapsed_time3:.6f} 秒")
 
 
 if __name__ == '__main__':

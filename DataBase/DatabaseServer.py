@@ -1,6 +1,6 @@
 import grpc
 from concurrent import futures
-
+from functools import cmp_to_key
 import database_pb2
 import database_pb2_grpc
 import federation_pb2
@@ -68,26 +68,6 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
     @staticmethod
     def calculate_distance(x1, y1, x2, y2):
         return (x1 - x2) ** 2 + (y1 - y2) ** 2
-
-    def encrypt_compare(self, x1, x2):
-        # x1>x2返回True
-        result = self.federation_stub.CompareDist(
-            federation_pb2.DistDiff(
-                dis1=x1,    # 二进制流
-                dis2=x2
-            )
-        )
-        return result.cmp_result
-
-    def encrypt_sort(self, enc_array):
-        n = len(enc_array)
-        for i in range(n):
-            for j in range(0, n - i - 1):
-                # 使用自定义比较函数
-                if self.encrypt_compare(enc_array[j][0], enc_array[j + 1][0]):
-                    # 交换位置
-                    enc_array[j], enc_array[j + 1] = enc_array[j + 1], enc_array[j]
-        return enc_array
 
     def QueryDistance(self, request, context):
         query_x = request.position_x
@@ -186,23 +166,19 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
 
         for x, y, _ in self.data:
             # 加密x,y
-            enc_x = ts.ckks_vector(database_party_context, [x])
-            enc_y = ts.ckks_vector(database_party_context, [y])
+            enc_x = ts.ckks_vector(database_party_context, [x * 0.01])
+            enc_y = ts.ckks_vector(database_party_context, [y * 0.01])
             # 计算距离(加密后)
             distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
-            # 序列化
-            serialized_distance = distance.serialize()
-            serialized_x = enc_x.serialize()
-            serialized_y = enc_y.serialize()
             # 加入列表
-            self.enc_distances.append((serialized_distance, serialized_x, serialized_y))
+            self.enc_distances.append((distance, enc_x, enc_y))
 
         # 按照距离升序排序
-        self.encrypt_sort(self.enc_distances)
+        self.enc_distances.sort(key=cmp_to_key(encrypt_compare))
 
         # 返回前query_num个距离
         nearest_distances = [database_pb2.EncryptedDisResult(
-            distance=distance)
+            distance=distance.serialize())
             for distance, _, _ in self.enc_distances[:query_num]]
 
         return database_pb2.EncryptedDisResponse(results=nearest_distances)
@@ -214,8 +190,8 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         # 构建返回数据
         results = [
             database_pb2.EncryptedQueryResult(
-                position_x=x,
-                position_y=y,
+                position_x=x.serialize(),
+                position_y=y.serialize(),
                 database_id=self.database_id
             )
             for _, x, y in nearest_points
@@ -259,6 +235,22 @@ def serve(database_id, other_database_address, port, config, options):
     server.wait_for_termination()
 
 
+def encrypt_compare(item1, item2):
+    # x1>x2返回1
+    dis_diff = item1[0] - item2[0]
+    result = federation_stub.CompareDist(
+        federation_pb2.DistDiff(
+            dis_diff=dis_diff.serialize()
+        )
+    )
+    if result.cmp_result == 1:
+        return 1
+    elif result.cmp_result == -1:
+        return -1
+    else:
+        return 0
+
+
 if __name__ == '__main__':
     databases = ["localhost:60051", "localhost:60052", "localhost:60053"]
     configs = [
@@ -290,6 +282,10 @@ if __name__ == '__main__':
         ('grpc.max_send_message_length', max_msg_size),
         ('grpc.max_receive_message_length', max_msg_size),
     ]
+
+    # 建立与联邦端的信道
+    federation_stub = federation_pb2_grpc.FederationServiceStub(
+        grpc.insecure_channel("localhost:50051", msg_options))
 
     # 启动多个服务端
     thread1 = Thread(target=serve, args=(1, [databases[1], databases[2]], 60051, configs[0], msg_options))
