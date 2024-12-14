@@ -97,13 +97,12 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         return federation_pb2.MapResponse()
 
     def CompareDist(self, request, context):
-        dis1 = ts.ckks_vector_from(self.context, request.dis1).decrypt()
-        dis2 = ts.ckks_vector_from(self.context, request.dis2).decrypt()
+        dis_diff = ts.ckks_vector_from(self.context, request.dis_diff).decrypt()
         # 注意解密后的结果为一个向量
-        if dis1[0] > dis2[0]:
-            answer = True
+        if dis_diff[0] < 0:
+            answer = -1
         else:
-            answer = False
+            answer = 1
         # 返回比较结果
         return federation_pb2.DiffResponse(
             cmp_result=answer
