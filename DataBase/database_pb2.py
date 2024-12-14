@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64\x61tabase.proto\"P\n\x13NearestQueryRequest\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\x12\x11\n\tquery_num\x18\x03 \x01(\x05\"\x1d\n\tDisResult\x12\x10\n\x08\x64istance\x18\x01 \x01(\x02\"*\n\x0b\x44isResponse\x12\x1b\n\x07results\x18\x01 \x03(\x0b\x32\n.DisResult\"\x1e\n\nNumRequest\x12\x10\n\x08need_num\x18\x01 \x01(\x05\"A\n\x17\x41ntiNearestQueryRequest\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\"`\n\x14\x43ompareOtherDatabase\x12\x0f\n\x07\x63ontext\x18\x01 \x01(\x0c\x12\x12\n\nposition_x\x18\x02 \x01(\x0c\x12\x12\n\nposition_y\x18\x03 \x01(\x0c\x12\x0f\n\x07min_dis\x18\x04 \x01(\x0c\"!\n\rCompareResult\x12\x10\n\x08\x64is_diff\x18\x01 \x01(\x0c\"2\n\x0f\x43ompareResponse\x12\x1f\n\x07results\x18\x01 \x03(\x0b\x32\x0e.CompareResult\"J\n\x0bQueryResult\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\x12\x13\n\x0b\x64\x61tabase_id\x18\x03 \x01(\x05\".\n\rQueryResponse\x12\x1d\n\x07results\x18\x01 \x03(\x0b\x32\x0c.QueryResult\"j\n\x1c\x45ncryptedNearestQueryRequest\x12\x0f\n\x07\x63ontext\x18\x01 \x01(\x0c\x12\x12\n\nposition_x\x18\x02 \x01(\x0c\x12\x12\n\nposition_y\x18\x03 \x01(\x0c\x12\x11\n\tquery_num\x18\x04 \x01(\x05\"&\n\x12\x45ncryptedDisResult\x12\x10\n\x08\x64istance\x18\x01 \x01(\x0c\"<\n\x14\x45ncryptedDisResponse\x12$\n\x07results\x18\x01 \x03(\x0b\x32\x13.EncryptedDisResult\"S\n\x14\x45ncryptedQueryResult\x12\x12\n\nposition_x\x18\x01 \x01(\x0c\x12\x12\n\nposition_y\x18\x02 \x01(\x0c\x12\x13\n\x0b\x64\x61tabase_id\x18\x03 \x01(\x05\"@\n\x16\x45ncryptedQueryResponse\x12&\n\x07results\x18\x01 \x03(\x0b\x32\x15.EncryptedQueryResult2\xf9\x02\n\x0f\x44\x61tabaseService\x12\x33\n\rQueryDistance\x12\x14.NearestQueryRequest\x1a\x0c.DisResponse\x12+\n\x0cQueryNeedNum\x12\x0b.NumRequest\x1a\x0e.QueryResponse\x12<\n\x10\x41ntiNearestQuery\x12\x18.AntiNearestQueryRequest\x1a\x0e.QueryResponse\x12N\n\x16\x45ncryptedQueryDistance\x12\x1d.EncryptedNearestQueryRequest\x1a\x15.EncryptedDisResponse\x12=\n\x15\x45ncryptedQueryNeedNum\x12\x0b.NumRequest\x1a\x17.EncryptedQueryResponse\x12\x37\n\x0c\x43ompareQuery\x12\x15.CompareOtherDatabase\x1a\x10.CompareResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64\x61tabase.proto\"P\n\x13NearestQueryRequest\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\x12\x11\n\tquery_num\x18\x03 \x01(\x05\"\x1d\n\tDisResult\x12\x10\n\x08\x64istance\x18\x01 \x01(\x02\"*\n\x0b\x44isResponse\x12\x1b\n\x07results\x18\x01 \x03(\x0b\x32\n.DisResult\"\x1e\n\nNumRequest\x12\x10\n\x08need_num\x18\x01 \x01(\x05\"A\n\x17\x41ntiNearestQueryRequest\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\"`\n\x14\x43ompareOtherDatabase\x12\x0f\n\x07\x63ontext\x18\x01 \x01(\x0c\x12\x12\n\nposition_x\x18\x02 \x01(\x0c\x12\x12\n\nposition_y\x18\x03 \x01(\x0c\x12\x0f\n\x07min_dis\x18\x04 \x01(\x0c\"\"\n\x0f\x43ompareResponse\x12\x0f\n\x07results\x18\x01 \x01(\x0c\"J\n\x0bQueryResult\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\x12\x13\n\x0b\x64\x61tabase_id\x18\x03 \x01(\x05\".\n\rQueryResponse\x12\x1d\n\x07results\x18\x01 \x03(\x0b\x32\x0c.QueryResult\"j\n\x1c\x45ncryptedNearestQueryRequest\x12\x0f\n\x07\x63ontext\x18\x01 \x01(\x0c\x12\x12\n\nposition_x\x18\x02 \x01(\x0c\x12\x12\n\nposition_y\x18\x03 \x01(\x0c\x12\x11\n\tquery_num\x18\x04 \x01(\x05\"&\n\x12\x45ncryptedDisResult\x12\x10\n\x08\x64istance\x18\x01 \x01(\x0c\"<\n\x14\x45ncryptedDisResponse\x12$\n\x07results\x18\x01 \x03(\x0b\x32\x13.EncryptedDisResult\"S\n\x14\x45ncryptedQueryResult\x12\x12\n\nposition_x\x18\x01 \x01(\x0c\x12\x12\n\nposition_y\x18\x02 \x01(\x0c\x12\x13\n\x0b\x64\x61tabase_id\x18\x03 \x01(\x05\"@\n\x16\x45ncryptedQueryResponse\x12&\n\x07results\x18\x01 \x03(\x0b\x32\x15.EncryptedQueryResult2\xf9\x02\n\x0f\x44\x61tabaseService\x12\x33\n\rQueryDistance\x12\x14.NearestQueryRequest\x1a\x0c.DisResponse\x12+\n\x0cQueryNeedNum\x12\x0b.NumRequest\x1a\x0e.QueryResponse\x12<\n\x10\x41ntiNearestQuery\x12\x18.AntiNearestQueryRequest\x1a\x0e.QueryResponse\x12N\n\x16\x45ncryptedQueryDistance\x12\x1d.EncryptedNearestQueryRequest\x1a\x15.EncryptedDisResponse\x12=\n\x15\x45ncryptedQueryNeedNum\x12\x0b.NumRequest\x1a\x17.EncryptedQueryResponse\x12\x37\n\x0c\x43ompareQuery\x12\x15.CompareOtherDatabase\x1a\x10.CompareResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -43,24 +43,22 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ANTINEARESTQUERYREQUEST']._serialized_end=272
   _globals['_COMPAREOTHERDATABASE']._serialized_start=274
   _globals['_COMPAREOTHERDATABASE']._serialized_end=370
-  _globals['_COMPARERESULT']._serialized_start=372
-  _globals['_COMPARERESULT']._serialized_end=405
-  _globals['_COMPARERESPONSE']._serialized_start=407
-  _globals['_COMPARERESPONSE']._serialized_end=457
-  _globals['_QUERYRESULT']._serialized_start=459
-  _globals['_QUERYRESULT']._serialized_end=533
-  _globals['_QUERYRESPONSE']._serialized_start=535
-  _globals['_QUERYRESPONSE']._serialized_end=581
-  _globals['_ENCRYPTEDNEARESTQUERYREQUEST']._serialized_start=583
-  _globals['_ENCRYPTEDNEARESTQUERYREQUEST']._serialized_end=689
-  _globals['_ENCRYPTEDDISRESULT']._serialized_start=691
-  _globals['_ENCRYPTEDDISRESULT']._serialized_end=729
-  _globals['_ENCRYPTEDDISRESPONSE']._serialized_start=731
-  _globals['_ENCRYPTEDDISRESPONSE']._serialized_end=791
-  _globals['_ENCRYPTEDQUERYRESULT']._serialized_start=793
-  _globals['_ENCRYPTEDQUERYRESULT']._serialized_end=876
-  _globals['_ENCRYPTEDQUERYRESPONSE']._serialized_start=878
-  _globals['_ENCRYPTEDQUERYRESPONSE']._serialized_end=942
-  _globals['_DATABASESERVICE']._serialized_start=945
-  _globals['_DATABASESERVICE']._serialized_end=1322
+  _globals['_COMPARERESPONSE']._serialized_start=372
+  _globals['_COMPARERESPONSE']._serialized_end=406
+  _globals['_QUERYRESULT']._serialized_start=408
+  _globals['_QUERYRESULT']._serialized_end=482
+  _globals['_QUERYRESPONSE']._serialized_start=484
+  _globals['_QUERYRESPONSE']._serialized_end=530
+  _globals['_ENCRYPTEDNEARESTQUERYREQUEST']._serialized_start=532
+  _globals['_ENCRYPTEDNEARESTQUERYREQUEST']._serialized_end=638
+  _globals['_ENCRYPTEDDISRESULT']._serialized_start=640
+  _globals['_ENCRYPTEDDISRESULT']._serialized_end=678
+  _globals['_ENCRYPTEDDISRESPONSE']._serialized_start=680
+  _globals['_ENCRYPTEDDISRESPONSE']._serialized_end=740
+  _globals['_ENCRYPTEDQUERYRESULT']._serialized_start=742
+  _globals['_ENCRYPTEDQUERYRESULT']._serialized_end=825
+  _globals['_ENCRYPTEDQUERYRESPONSE']._serialized_start=827
+  _globals['_ENCRYPTEDQUERYRESPONSE']._serialized_end=891
+  _globals['_DATABASESERVICE']._serialized_start=894
+  _globals['_DATABASESERVICE']._serialized_end=1271
 # @@protoc_insertion_point(module_scope)

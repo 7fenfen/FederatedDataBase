@@ -48,14 +48,10 @@ message CompareOtherDatabase {
   bytes min_dis = 4;
 }
 
-// 单个查询结果的数据结构
-message CompareResult {
-  bytes dis_diff = 1;  // 距离之差
-}
 
 // 查询回应
 message CompareResponse {
-  repeated CompareResult results = 1;
+  bytes results = 1;  // 一个加密向量
 }
 
 

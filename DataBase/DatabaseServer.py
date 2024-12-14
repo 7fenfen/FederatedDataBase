@@ -67,7 +67,7 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
 
     @staticmethod
     def calculate_distance(x1, y1, x2, y2):
-        return (x1 - x2) ** 2 + (y1 - y2) ** 2
+        return (x2 - x1) ** 2 + (y2 - y1) ** 2
 
     def QueryDistance(self, request, context):
         query_x = request.position_x
@@ -137,13 +137,11 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
                         min_dis=enc_min_dis
                     )
                 )
-                results.extend(response.results)
+                results.extend(ts.ckks_vector_from(self.context, response.results).decrypt())
             # 排除与其它数据库中点最近的点
             flag = False
             for result in results:
-                dis_diff = ts.ckks_vector_from(self.context, result.dis_diff)
-                # 如果有更近的点
-                if dis_diff.decrypt()[0] < 0:
+                if result < 0:
                     flag = True
             if not flag:
                 final_result.append(database_pb2.QueryResult(
@@ -166,8 +164,8 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
 
         for x, y, _ in self.data:
             # 加密x,y
-            enc_x = ts.ckks_vector(database_party_context, [x * 0.1])
-            enc_y = ts.ckks_vector(database_party_context, [y * 0.1])
+            enc_x = ts.ckks_vector(database_party_context, [x])
+            enc_y = ts.ckks_vector(database_party_context, [y])
             # 计算距离(加密后)
             distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
             # 加入列表
@@ -207,20 +205,17 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         enc_query_x = ts.ckks_vector_from(database_party_context, request.position_x)
         enc_query_y = ts.ckks_vector_from(database_party_context, request.position_y)
         enc_min_dis = ts.ckks_vector_from(database_party_context, request.min_dis)
-        # 结果列表
-        results = []
-        for user_id, x, y in self.data:
-            # 加密x,y
-            enc_x = ts.ckks_vector(database_party_context, [x])
-            enc_y = ts.ckks_vector(database_party_context, [y])
-            # 计算距离(加密后)
-            distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
-            dis_diff = distance - enc_min_dis
-            # 构建结果
-            results.append(database_pb2.CompareResult(
-                dis_diff=dis_diff.serialize()))
+        # x,y单独的列表
+        x = [row[0] for row in self.data]
+        y = [row[1] for row in self.data]
+        # 加密x,y
+        enc_x = ts.ckks_vector(database_party_context, x)
+        enc_y = ts.ckks_vector(database_party_context, y)
+        # 计算距离(加密后)
+        distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
+        dis_diff = distance - enc_min_dis
         # 返回结果
-        return database_pb2.CompareResponse(results=results)
+        return database_pb2.CompareResponse(results=dis_diff.serialize())
 
 
 def serve(database_id, other_database_address, port, config, options):
