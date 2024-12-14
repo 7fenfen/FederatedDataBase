@@ -1,5 +1,6 @@
 import grpc
 import json
+import time
 from concurrent import futures
 import database_pb2
 import database_pb2_grpc
@@ -108,13 +109,45 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
             cmp_result=answer
         )
 
+    def test(self):
+        federated_query = FederationQuery(
+            ["localhost:60051", "localhost:60052", "localhost:60053"], self.context)
+
+        # test1,非加密最近邻
+        time1 = time.time()
+        results = federated_query.nearest_query(150, 150, 10)
+        print(f"Query Type: Nearest, X:150, Y:150, QueryNum:10")
+        for result in results:
+            print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+        time2 = time.time()
+        elapsed_time1 = time2 - time1
+        print(f"程序运行时间: {elapsed_time1:.6f} 秒")
+        # test2,非加密反向最近邻
+        results = federated_query.anti_nearest_query(100, 100)
+        print(f"Query Type: AntiNearest, X:100, Y:100")
+        for result in results:
+            print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
+        time3 = time.time()
+        elapsed_time2 = time3 - time2
+        print(f"程序运行时间: {elapsed_time2:.6f} 秒")
+        # test3,加密最近邻
+        results = federated_query.encrypted_nearest_query(150, 150, 10)
+        print(f"Query Type: EncryptedNearest, X:150, Y:150, QueryNum:10")
+        for result in results:
+            print(f"User at ({result[0]}, {result[1]}) from Database {result[2]}")
+        time4 = time.time()
+        elapsed_time3 = time4 - time3
+        print(f"程序运行时间: {elapsed_time3:.6f} 秒")
+
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    federation_pb2_grpc.add_FederationServiceServicer_to_server(FederationServiceServicer(federated_config), server)
+    servicer = FederationServiceServicer(federated_config)
+    federation_pb2_grpc.add_FederationServiceServicer_to_server(servicer, server)
     server.add_insecure_port('[::]:50051')
     print("Server is running on port 50051...")
     server.start()
+    servicer.test()
     server.wait_for_termination()
 
 

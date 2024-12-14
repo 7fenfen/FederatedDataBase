@@ -166,8 +166,8 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
 
         for x, y, _ in self.data:
             # 加密x,y
-            enc_x = ts.ckks_vector(database_party_context, [x * 0.1])
-            enc_y = ts.ckks_vector(database_party_context, [y * 0.1])
+            enc_x = ts.ckks_vector(database_party_context, [x])
+            enc_y = ts.ckks_vector(database_party_context, [y])
             # 计算距离(加密后)
             distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
             # 加入列表
