@@ -110,7 +110,8 @@ class FederationQuery:
                     dec_position_x = ts.ckks_vector_from(self.context, result.position_x).decrypt()
                     dec_position_y = ts.ckks_vector_from(self.context, result.position_y).decrypt()
                     # 将最终结果加入列表
-                    final_results.append((dec_position_x[0] * 10, dec_position_y[0] * 10, result.database_id))
+                    final_results.append(
+                        (int(dec_position_x[0] * 10), int(dec_position_y[0] * 10), result.database_id))
         return final_results
 
 
