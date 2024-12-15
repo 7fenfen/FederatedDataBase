@@ -12,6 +12,11 @@ enum QueryType {
   AntiNearest = 1;
 }
 
+enum AddResult {
+  Fail = 0;
+  Success = 1;
+}
+
 message CheckRequest {
   QueryType query_type = 1;     // 查询类型的枚举,包括最近邻查询Nearest和反向最近邻查询AntiNearest
   int32 position_x = 2;         // 待查点的横坐标
@@ -34,18 +39,10 @@ message AddRequest {
   string address = 1;
 }
 
-enum AddResult {
-  Fail = 0;
-  Success = 1;
-}
-
 message AddResponse {
   AddResult add_result = 1;
 }
 
-message MapResponse {
-  bytes map = 1;                 // 序列化后的图片的二进制流,前端需要复原成图片
-}
 
 // ======= 以下无需前端实现！ =======
 // 因为需要有database到federation的请求,所以把定义也放在这里
@@ -61,7 +58,6 @@ service FederationService {
   // 前端向federation发送的消息类型
   rpc CheckData (CheckRequest) returns (CheckResponse);
   rpc AddDatabase (AddRequest) returns (AddResponse);
-  rpc GenerateMap (CheckResponse) returns (MapResponse);
   // database向federation发送的消息类型
   rpc CompareDist (DistDiff) returns (DiffResponse);
 }
