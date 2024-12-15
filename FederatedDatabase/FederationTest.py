@@ -4,7 +4,8 @@ import federation_pb2
 import federation_pb2_grpc
 
 
-def test():
+# 测试联邦的CheckData方法
+def check_test():
     max_msg_size = 100 * 1024 * 1024  # 设置为 100MB
     msg_options = [
         ('grpc.max_send_message_length', max_msg_size),
@@ -63,5 +64,24 @@ def test():
     print(f"程序运行时间: {elapsed_time3:.6f} 秒")
 
 
+# 测试联邦的AddDatabase方法
+def add_test():
+    max_msg_size = 100 * 1024 * 1024  # 设置为 100MB
+    msg_options = [
+        ('grpc.max_send_message_length', max_msg_size),
+        ('grpc.max_receive_message_length', max_msg_size),
+    ]
+
+    # 建立与联邦端的信道
+    federation_stub = federation_pb2_grpc.FederationServiceStub(
+        grpc.insecure_channel("localhost:50051", msg_options))
+
+    result = federation_stub.AddDatabase(federation_pb2.AddRequest(
+        address="localhost:60054",
+    ))
+    print(result.add_result)
+
+
 if __name__ == '__main__':
-    test()
+    check_test()
+    add_test()
