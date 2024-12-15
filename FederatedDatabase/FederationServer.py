@@ -1,9 +1,6 @@
 import grpc
-import json
 import time
 from concurrent import futures
-import database_pb2
-import database_pb2_grpc
 import federation_pb2
 import federation_pb2_grpc
 import mysql.connector
@@ -62,7 +59,7 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         context.global_scale = 2 ** 21
         return context
 
-    def Check(self, request, context):
+    def CheckData(self, request, context):
         # 接受数据
         query_type = request.query_type
         position_x = request.position_x
@@ -79,9 +76,9 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
             results = self.querier.anti_nearest_query(position_x, position_y)
         for result in results:
             final_results.append(federation_pb2.CheckResult(
-                position_x=result.position_x,
-                position_y=result.position_y,
-                database_id=result.database_id))
+                position_x=result[0],
+                position_y=result[1],
+                database_id=result[2]))
 
         return federation_pb2.CheckResponse(
             results=final_results,
@@ -109,36 +106,6 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
             cmp_result=answer
         )
 
-    def test(self):
-        federated_query = FederationQuery(
-            ["localhost:60051", "localhost:60052", "localhost:60053"], self.context)
-
-        # test1,非加密最近邻
-        time1 = time.time()
-        results = federated_query.nearest_query(150, 150, 10)
-        print(f"Query Type: Nearest, X:150, Y:150, QueryNum:10")
-        for result in results:
-            print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
-        time2 = time.time()
-        elapsed_time1 = time2 - time1
-        print(f"程序运行时间: {elapsed_time1:.6f} 秒")
-        # test2,非加密反向最近邻
-        results = federated_query.anti_nearest_query(100, 100)
-        print(f"Query Type: AntiNearest, X:100, Y:100")
-        for result in results:
-            print(f"User at ({result.position_x}, {result.position_y}) from Database {result.database_id}")
-        time3 = time.time()
-        elapsed_time2 = time3 - time2
-        print(f"程序运行时间: {elapsed_time2:.6f} 秒")
-        # test3,加密最近邻
-        results = federated_query.encrypted_nearest_query(150, 150, 10)
-        print(f"Query Type: EncryptedNearest, X:150, Y:150, QueryNum:10")
-        for result in results:
-            print(f"User at ({result[0]}, {result[1]}) from Database {result[2]}")
-        time4 = time.time()
-        elapsed_time3 = time4 - time3
-        print(f"程序运行时间: {elapsed_time3:.6f} 秒")
-
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -147,7 +114,6 @@ def serve():
     server.add_insecure_port('[::]:50051')
     print("Server is running on port 50051...")
     server.start()
-    servicer.test()
     server.wait_for_termination()
 
 

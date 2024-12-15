@@ -59,7 +59,7 @@ message DiffResponse {
 
 service FederationService {
   // 前端向federation发送的消息类型
-  rpc Check (CheckRequest) returns (CheckResponse);
+  rpc CheckData (CheckRequest) returns (CheckResponse);
   rpc AddDatabase (AddRequest) returns (AddResponse);
   rpc GenerateMap (CheckResponse) returns (MapResponse);
   // database向federation发送的消息类型
