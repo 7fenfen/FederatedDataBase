@@ -1,7 +1,6 @@
 import grpc
 import database_pb2, database_pb2_grpc
 import tenseal as ts
-import time
 
 
 class FederationQuery:

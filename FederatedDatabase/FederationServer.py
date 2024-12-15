@@ -1,5 +1,4 @@
 import grpc
-import time
 from concurrent import futures
 import federation_pb2
 import federation_pb2_grpc
@@ -88,11 +87,6 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         """处理AddDatabase请求"""
         # TODO: 实现函数逻辑
         return federation_pb2.AddResponse()
-
-    def GenerateMap(self, request, context):
-        """处理GenerateMap请求"""
-        # TODO: 实现函数逻辑
-        return federation_pb2.MapResponse()
 
     def CompareDist(self, request, context):
         dis_diff = ts.ckks_vector_from(self.context, request.dis_diff).decrypt()

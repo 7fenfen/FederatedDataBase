@@ -24,17 +24,17 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x66\x65\x64\x65ration.proto\"z\n\x0c\x43heckRequest\x12\x1e\n\nquery_type\x18\x01 \x01(\x0e\x32\n.QueryType\x12\x12\n\nposition_x\x18\x02 \x01(\x05\x12\x12\n\nposition_y\x18\x03 \x01(\x05\x12\x11\n\tquery_num\x18\x04 \x01(\x05\x12\x0f\n\x07\x65ncrypt\x18\x05 \x01(\x08\"J\n\x0b\x43heckResult\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\x12\x13\n\x0b\x64\x61tabase_id\x18\x03 \x01(\x05\".\n\rCheckResponse\x12\x1d\n\x07results\x18\x01 \x03(\x0b\x32\x0c.CheckResult\"\x1d\n\nAddRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"-\n\x0b\x41\x64\x64Response\x12\x1e\n\nadd_result\x18\x01 \x01(\x0e\x32\n.AddResult\"\x1a\n\x0bMapResponse\x12\x0b\n\x03map\x18\x01 \x01(\x0c\"\x1c\n\x08\x44istDiff\x12\x10\n\x08\x64is_diff\x18\x01 \x01(\x0c\"\"\n\x0c\x44iffResponse\x12\x12\n\ncmp_result\x18\x01 \x01(\x05*)\n\tQueryType\x12\x0b\n\x07Nearest\x10\x00\x12\x0f\n\x0b\x41ntiNearest\x10\x01*\"\n\tAddResult\x12\x08\n\x04\x46\x61il\x10\x00\x12\x0b\n\x07Success\x10\x01\x32\xbf\x01\n\x11\x46\x65\x64\x65rationService\x12*\n\tCheckData\x12\r.CheckRequest\x1a\x0e.CheckResponse\x12(\n\x0b\x41\x64\x64\x44\x61tabase\x12\x0b.AddRequest\x1a\x0c.AddResponse\x12+\n\x0bGenerateMap\x12\x0e.CheckResponse\x1a\x0c.MapResponse\x12\'\n\x0b\x43ompareDist\x12\t.DistDiff\x1a\r.DiffResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x66\x65\x64\x65ration.proto\"z\n\x0c\x43heckRequest\x12\x1e\n\nquery_type\x18\x01 \x01(\x0e\x32\n.QueryType\x12\x12\n\nposition_x\x18\x02 \x01(\x05\x12\x12\n\nposition_y\x18\x03 \x01(\x05\x12\x11\n\tquery_num\x18\x04 \x01(\x05\x12\x0f\n\x07\x65ncrypt\x18\x05 \x01(\x08\"J\n\x0b\x43heckResult\x12\x12\n\nposition_x\x18\x01 \x01(\x05\x12\x12\n\nposition_y\x18\x02 \x01(\x05\x12\x13\n\x0b\x64\x61tabase_id\x18\x03 \x01(\x05\".\n\rCheckResponse\x12\x1d\n\x07results\x18\x01 \x03(\x0b\x32\x0c.CheckResult\"\x1d\n\nAddRequest\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"-\n\x0b\x41\x64\x64Response\x12\x1e\n\nadd_result\x18\x01 \x01(\x0e\x32\n.AddResult\"\x1c\n\x08\x44istDiff\x12\x10\n\x08\x64is_diff\x18\x01 \x01(\x0c\"\"\n\x0c\x44iffResponse\x12\x12\n\ncmp_result\x18\x01 \x01(\x05*)\n\tQueryType\x12\x0b\n\x07Nearest\x10\x00\x12\x0f\n\x0b\x41ntiNearest\x10\x01*\"\n\tAddResult\x12\x08\n\x04\x46\x61il\x10\x00\x12\x0b\n\x07Success\x10\x01\x32\x92\x01\n\x11\x46\x65\x64\x65rationService\x12*\n\tCheckData\x12\r.CheckRequest\x1a\x0e.CheckResponse\x12(\n\x0b\x41\x64\x64\x44\x61tabase\x12\x0b.AddRequest\x1a\x0c.AddResponse\x12\'\n\x0b\x43ompareDist\x12\t.DistDiff\x1a\r.DiffResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'federation_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_QUERYTYPE']._serialized_start=440
-  _globals['_QUERYTYPE']._serialized_end=481
-  _globals['_ADDRESULT']._serialized_start=483
-  _globals['_ADDRESULT']._serialized_end=517
+  _globals['_QUERYTYPE']._serialized_start=412
+  _globals['_QUERYTYPE']._serialized_end=453
+  _globals['_ADDRESULT']._serialized_start=455
+  _globals['_ADDRESULT']._serialized_end=489
   _globals['_CHECKREQUEST']._serialized_start=20
   _globals['_CHECKREQUEST']._serialized_end=142
   _globals['_CHECKRESULT']._serialized_start=144
@@ -45,12 +45,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ADDREQUEST']._serialized_end=297
   _globals['_ADDRESPONSE']._serialized_start=299
   _globals['_ADDRESPONSE']._serialized_end=344
-  _globals['_MAPRESPONSE']._serialized_start=346
-  _globals['_MAPRESPONSE']._serialized_end=372
-  _globals['_DISTDIFF']._serialized_start=374
-  _globals['_DISTDIFF']._serialized_end=402
-  _globals['_DIFFRESPONSE']._serialized_start=404
-  _globals['_DIFFRESPONSE']._serialized_end=438
-  _globals['_FEDERATIONSERVICE']._serialized_start=520
-  _globals['_FEDERATIONSERVICE']._serialized_end=711
+  _globals['_DISTDIFF']._serialized_start=346
+  _globals['_DISTDIFF']._serialized_end=374
+  _globals['_DIFFRESPONSE']._serialized_start=376
+  _globals['_DIFFRESPONSE']._serialized_end=410
+  _globals['_FEDERATIONSERVICE']._serialized_start=492
+  _globals['_FEDERATIONSERVICE']._serialized_end=638
 # @@protoc_insertion_point(module_scope)

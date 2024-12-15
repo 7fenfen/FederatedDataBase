@@ -44,11 +44,6 @@ class FederationServiceStub(object):
                 request_serializer=federation__pb2.AddRequest.SerializeToString,
                 response_deserializer=federation__pb2.AddResponse.FromString,
                 _registered_method=True)
-        self.GenerateMap = channel.unary_unary(
-                '/FederationService/GenerateMap',
-                request_serializer=federation__pb2.CheckResponse.SerializeToString,
-                response_deserializer=federation__pb2.MapResponse.FromString,
-                _registered_method=True)
         self.CompareDist = channel.unary_unary(
                 '/FederationService/CompareDist',
                 request_serializer=federation__pb2.DistDiff.SerializeToString,
@@ -67,12 +62,6 @@ class FederationServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def AddDatabase(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GenerateMap(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -97,11 +86,6 @@ def add_FederationServiceServicer_to_server(servicer, server):
                     servicer.AddDatabase,
                     request_deserializer=federation__pb2.AddRequest.FromString,
                     response_serializer=federation__pb2.AddResponse.SerializeToString,
-            ),
-            'GenerateMap': grpc.unary_unary_rpc_method_handler(
-                    servicer.GenerateMap,
-                    request_deserializer=federation__pb2.CheckResponse.FromString,
-                    response_serializer=federation__pb2.MapResponse.SerializeToString,
             ),
             'CompareDist': grpc.unary_unary_rpc_method_handler(
                     servicer.CompareDist,
@@ -163,33 +147,6 @@ class FederationService(object):
             '/FederationService/AddDatabase',
             federation__pb2.AddRequest.SerializeToString,
             federation__pb2.AddResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def GenerateMap(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/FederationService/GenerateMap',
-            federation__pb2.CheckResponse.SerializeToString,
-            federation__pb2.MapResponse.FromString,
             options,
             channel_credentials,
             insecure,
