@@ -34,8 +34,8 @@ class FederationServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Check = channel.unary_unary(
-                '/FederationService/Check',
+        self.CheckData = channel.unary_unary(
+                '/FederationService/CheckData',
                 request_serializer=federation__pb2.CheckRequest.SerializeToString,
                 response_deserializer=federation__pb2.CheckResponse.FromString,
                 _registered_method=True)
@@ -59,7 +59,7 @@ class FederationServiceStub(object):
 class FederationServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def Check(self, request, context):
+    def CheckData(self, request, context):
         """前端向federation发送的消息类型
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -88,8 +88,8 @@ class FederationServiceServicer(object):
 
 def add_FederationServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Check': grpc.unary_unary_rpc_method_handler(
-                    servicer.Check,
+            'CheckData': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckData,
                     request_deserializer=federation__pb2.CheckRequest.FromString,
                     response_serializer=federation__pb2.CheckResponse.SerializeToString,
             ),
@@ -120,7 +120,7 @@ class FederationService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Check(request,
+    def CheckData(request,
             target,
             options=(),
             channel_credentials=None,
@@ -133,7 +133,7 @@ class FederationService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/FederationService/Check',
+            '/FederationService/CheckData',
             federation__pb2.CheckRequest.SerializeToString,
             federation__pb2.CheckResponse.FromString,
             options,

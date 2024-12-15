@@ -51,7 +51,8 @@ class FederationQuery:
         for db_stub, count in db_counts.items():
             if count > 0:
                 response = db_stub.QueryNeedNum(database_pb2.NumRequest(need_num=count))
-                final_results.extend(response.results)
+                for result in response.results:
+                    final_results.append((result.position_x, result.position_y, result.database_id))
 
         return final_results
 
@@ -63,7 +64,9 @@ class FederationQuery:
                 database_pb2.AntiNearestQueryRequest(
                     position_x=query_x,
                     position_y=query_y))
-            final_results.extend(response.results)
+            for result in response.results:
+                final_results.append((result.position_x, result.position_y, result.database_id))
+
         return final_results
 
     def encrypted_nearest_query(self, query_x, query_y, query_num):

@@ -1,9 +1,6 @@
 import grpc
-import json
 import time
 from concurrent import futures
-import database_pb2
-import database_pb2_grpc
 import federation_pb2
 import federation_pb2_grpc
 import mysql.connector
@@ -62,7 +59,7 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         context.global_scale = 2 ** 21
         return context
 
-    def Check(self, request, context):
+    def CheckData(self, request, context):
         # 接受数据
         query_type = request.query_type
         position_x = request.position_x
@@ -79,9 +76,9 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
             results = self.querier.anti_nearest_query(position_x, position_y)
         for result in results:
             final_results.append(federation_pb2.CheckResult(
-                position_x=result.position_x,
-                position_y=result.position_y,
-                database_id=result.database_id))
+                position_x=result[0],
+                position_y=result[1],
+                database_id=result[2]))
 
         return federation_pb2.CheckResponse(
             results=final_results,
@@ -110,8 +107,7 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         )
 
     def test(self):
-        federated_query = FederationQuery(
-            ["localhost:60051", "localhost:60052", "localhost:60053"], self.context)
+        federated_query = FederationQuery(self.database_address, self.context)
 
         # test1,非加密最近邻
         time1 = time.time()
@@ -147,7 +143,8 @@ def serve():
     server.add_insecure_port('[::]:50051')
     print("Server is running on port 50051...")
     server.start()
-    servicer.test()
+    # 运行测试
+    # servicer.test()
     server.wait_for_termination()
 
 
