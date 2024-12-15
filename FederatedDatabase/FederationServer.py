@@ -84,9 +84,25 @@ class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
         )
 
     def AddDatabase(self, request, context):
-        """处理AddDatabase请求"""
-        # TODO: 实现函数逻辑
-        return federation_pb2.AddResponse()
+        try:
+            # 执行插入
+            insert = """
+                        INSERT INTO address(database_address)
+                        VALUES(%s)
+                        """
+            values = (request.address,)
+            self.cursor.execute(insert, values)
+            # 提交
+            self.connection.commit()
+            return federation_pb2.AddResponse(
+                add_result=federation_pb2.Success)
+        except Error as e:
+            # 出错要回滚
+            self.connection.rollback()
+            print("Error while connecting to MySQL", e)
+            return federation_pb2.AddResponse(
+                add_result=federation_pb2.Fail
+            )
 
     def CompareDist(self, request, context):
         dis_diff = ts.ckks_vector_from(self.context, request.dis_diff).decrypt()
