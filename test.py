@@ -39,7 +39,7 @@ v2 = [4, 3, 2, 1, 0]
 enc_v2 = ts.ckks_vector(second_party_context, v2)
 print(enc_v2)
 # 第二方在加密空间内进行加法操作
-result = enc_v1_second_party ** 2 + enc_v2 ** 2
+result =  enc_v2 ** 2 + enc_v1_second_party ** 2
 
 # 序列化加密的结果以发送回第一方
 serialized_result = result.serialize()
