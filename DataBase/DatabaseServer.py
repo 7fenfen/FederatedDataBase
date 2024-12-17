@@ -9,6 +9,7 @@ from threading import Thread
 import mysql.connector
 from mysql.connector import Error
 import tenseal as ts
+from DataBaseConfig import configs
 
 
 class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
@@ -248,29 +249,6 @@ def encrypt_compare(item1, item2):
 
 if __name__ == '__main__':
     databases = ["localhost:60051", "localhost:60052", "localhost:60053"]
-    configs = [
-        {
-            'host': '112.4.115.127',
-            'port': 3312,
-            'database': 'zhx_database1',
-            'user': 'zhx_0001',
-            'password': 'ARfDhjdBbBmzrMaY'
-        },
-        {
-            'host': '112.4.115.127',
-            'port': 3312,
-            'database': 'zhx_database2',
-            'user': 'zhx_0001',
-            'password': 'ARfDhjdBbBmzrMaY'
-        },
-        {
-            'host': '112.4.115.127',
-            'port': 3312,
-            'database': 'zhx_database3',
-            'user': 'zhx_0001',
-            'password': 'ARfDhjdBbBmzrMaY'
-        }
-    ]
 
     max_msg_size = 100 * 1024 * 1024  # 设置为 100MB
     msg_options = [

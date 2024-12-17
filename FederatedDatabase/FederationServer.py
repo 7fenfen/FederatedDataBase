@@ -6,14 +6,7 @@ import mysql.connector
 from mysql.connector import Error
 from FederationQuery import FederationQuery
 import tenseal as ts
-
-federated_config = {
-    'host': '112.4.115.127',
-    'port': 3312,
-    'database': 'zhx_0001',
-    'user': 'zhx_0001',
-    'password': 'ARfDhjdBbBmzrMaY'
-}
+from FederationConfig import federated_config
 
 
 class FederationServiceServicer(federation_pb2_grpc.FederationServiceServicer):
