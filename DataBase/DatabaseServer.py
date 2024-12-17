@@ -146,7 +146,7 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
             # 排除与其它数据库中点最近的点
             flag = False
             for result in results:
-                if result < 0:
+                if round(result) < 0:
                     flag = True
             if not flag:
                 final_result.append(database_pb2.QueryResult(
@@ -182,9 +182,10 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         for item in temp_distances:
             max_heap.push(item)
         self.enc_distances = max_heap.get_elements()
+
         # 堆的顺序不是按照大小的，所以还需要简单排序一下
         self.enc_distances.sort(key=cmp_to_key(encrypt_compare))
-        print(111)
+
         # 返回前query_num个距离
         nearest_distances = [database_pb2.EncryptedDisResult(
             distance=distance.serialize())
