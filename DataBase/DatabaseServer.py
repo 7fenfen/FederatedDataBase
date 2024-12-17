@@ -10,6 +10,7 @@ import mysql.connector
 from mysql.connector import Error
 import tenseal as ts
 from DataBaseConfig import configs
+from EncryptedMaxHeap import EncryptedMaxHeap, encrypt_compare
 
 
 class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
@@ -27,6 +28,8 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         # 储存容器(用于跨方法调用)
         self.distances = []  # 用来存储到查询点的距离
         self.enc_distances = []  # 用来存储到查询点的加密距离
+        # 联邦传入的加密环境
+        self.database_party_context = None
 
     @staticmethod
     def stub_init(addresses, options):
@@ -114,6 +117,7 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         final_result = []
         query_x = request.position_x
         query_y = request.position_y
+
         # 看有没有以查询点为最小最近邻的点
         for x, y, min_dis in self.data:
             dis = self.calculate_distance(query_x, query_y, x, y)
@@ -156,48 +160,57 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         # 接收数据
         query_num = request.query_num
         # 还原加密环境
-        database_party_context = ts.context_from(request.context)
+        self.database_party_context = ts.context_from(request.context)
         # 把数据加载到新的加密环境
-        enc_query_x = ts.ckks_vector_from(database_party_context, request.position_x)
-        enc_query_y = ts.ckks_vector_from(database_party_context, request.position_y)
+        enc_query_x = ts.ckks_vector_from(self.database_party_context, request.position_x)
+        enc_query_y = ts.ckks_vector_from(self.database_party_context, request.position_y)
 
         self.enc_distances = []  # 清空距离数据
+        temp_distances = []
 
         for x, y, _ in self.data:
             # 加密x,y
-            enc_x = ts.ckks_vector(database_party_context, [x])
-            enc_y = ts.ckks_vector(database_party_context, [y])
+            enc_x = ts.ckks_vector(self.database_party_context, [x])
+            enc_y = ts.ckks_vector(self.database_party_context, [y])
             # 计算距离(加密后)
             distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
             # 加入列表
-            self.enc_distances.append((distance, enc_x, enc_y))
+            temp_distances.append((distance, x, y))
 
-        # 按照距离升序排序
+        # 用大顶堆找出前query_num个元素
+        max_heap = EncryptedMaxHeap(query_num)
+        for item in temp_distances:
+            max_heap.push(item)
+        self.enc_distances = max_heap.get_elements()
+        # 堆的顺序不是按照大小的，所以还需要简单排序一下
         self.enc_distances.sort(key=cmp_to_key(encrypt_compare))
-
+        print(111)
         # 返回前query_num个距离
         nearest_distances = [database_pb2.EncryptedDisResult(
             distance=distance.serialize())
-            for distance, _, _ in self.enc_distances[:query_num]]
+            for distance, _, _ in self.enc_distances]
 
         return database_pb2.EncryptedDisResponse(results=nearest_distances)
 
     def EncryptedQueryNeedNum(self, request, context):
+        # 接收数据
         num_points = request.need_num
         # 直接根据已排序的距离列表返回最接近的num_points个点
         nearest_points = self.enc_distances[:num_points]
-        # 构建返回数据
-        results = [
-            database_pb2.EncryptedQueryResult(
-                position_x=x.serialize(),
-                position_y=y.serialize(),
-                database_id=self.database_id
-            )
-            for _, x, y in nearest_points
-        ]
+        x = [row[1] for row in nearest_points]
+        y = [row[2] for row in nearest_points]
+        enc_x = ts.ckks_vector(self.database_party_context, x)
+        enc_y = ts.ckks_vector(self.database_party_context, y)
+
         # 清空 distances，以便下一次查询时可以重新计算
         self.enc_distances = []
-        return database_pb2.EncryptedQueryResponse(results=results)
+
+        # 构建返回数据
+        return database_pb2.EncryptedQueryResult(
+                position_x=enc_x.serialize(),
+                position_y=enc_y.serialize(),
+                database_id=self.database_id
+            )
 
     def CompareQuery(self, request, context):
         # 还原加密环境
@@ -231,26 +244,12 @@ def serve(database_id, other_database_address, port, config, options):
     server.wait_for_termination()
 
 
-def encrypt_compare(item1, item2):
-    # x1>x2返回1
-    dis_diff = item1[0] - item2[0]
-    result = federation_stub.CompareDist(
-        federation_pb2.DistDiff(
-            dis_diff=dis_diff.serialize()
-        )
-    )
-    if result.cmp_result == 1:
-        return 1
-    elif result.cmp_result == -1:
-        return -1
-    else:
-        return 0
-
-
 if __name__ == '__main__':
+    # 数据库地址
     databases = ["localhost:60051", "localhost:60052", "localhost:60053"]
 
-    max_msg_size = 100 * 1024 * 1024  # 设置为 100MB
+    # 设置消息大小为 100MB
+    max_msg_size = 100 * 1024 * 1024
     msg_options = [
         ('grpc.max_send_message_length', max_msg_size),
         ('grpc.max_receive_message_length', max_msg_size),

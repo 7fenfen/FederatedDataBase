@@ -58,7 +58,7 @@ class DatabaseServiceStub(object):
         self.EncryptedQueryNeedNum = channel.unary_unary(
                 '/DatabaseService/EncryptedQueryNeedNum',
                 request_serializer=database__pb2.NumRequest.SerializeToString,
-                response_deserializer=database__pb2.EncryptedQueryResponse.FromString,
+                response_deserializer=database__pb2.EncryptedQueryResult.FromString,
                 _registered_method=True)
         self.CompareQuery = channel.unary_unary(
                 '/DatabaseService/CompareQuery',
@@ -139,7 +139,7 @@ def add_DatabaseServiceServicer_to_server(servicer, server):
             'EncryptedQueryNeedNum': grpc.unary_unary_rpc_method_handler(
                     servicer.EncryptedQueryNeedNum,
                     request_deserializer=database__pb2.NumRequest.FromString,
-                    response_serializer=database__pb2.EncryptedQueryResponse.SerializeToString,
+                    response_serializer=database__pb2.EncryptedQueryResult.SerializeToString,
             ),
             'CompareQuery': grpc.unary_unary_rpc_method_handler(
                     servicer.CompareQuery,
@@ -282,7 +282,7 @@ class DatabaseService(object):
             target,
             '/DatabaseService/EncryptedQueryNeedNum',
             database__pb2.NumRequest.SerializeToString,
-            database__pb2.EncryptedQueryResponse.FromString,
+            database__pb2.EncryptedQueryResult.FromString,
             options,
             channel_credentials,
             insecure,

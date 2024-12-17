@@ -93,16 +93,11 @@ message EncryptedDisResponse {
 
 
 // ======= 加密查询结果 =======
-// 小型数据库返回的查询结果的数据结构
+// 小型数据库返回的查询结果
 message EncryptedQueryResult {
   bytes position_x = 1;
   bytes position_y = 2;
   int32 database_id = 3;
-}
-
-// 小型数据库返回的查询结果
-message EncryptedQueryResponse {
-  repeated EncryptedQueryResult results = 1;
 }
 
 
@@ -116,7 +111,7 @@ service DatabaseService {
   rpc AntiNearestQuery (AntiNearestQueryRequest) returns (QueryResponse);
   // 加密最近邻查询的信道
   rpc EncryptedQueryDistance (EncryptedNearestQueryRequest) returns (EncryptedDisResponse);
-  rpc EncryptedQueryNeedNum (NumRequest) returns (EncryptedQueryResponse);
+  rpc EncryptedQueryNeedNum (NumRequest) returns (EncryptedQueryResult);
 
   // ======= database向database发送的数据类型 =======
   // 反向最近邻查询时用于跨数据库比较距离

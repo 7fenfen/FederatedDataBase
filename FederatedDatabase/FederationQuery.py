@@ -107,11 +107,11 @@ class FederationQuery:
             if count > 0:
                 response = db_stub.EncryptedQueryNeedNum(
                     database_pb2.NumRequest(need_num=count))
-                for result in response.results:
-                    # 将序列化的结果变成密文并解密
-                    dec_position_x = ts.ckks_vector_from(self.context, result.position_x).decrypt()
-                    dec_position_y = ts.ckks_vector_from(self.context, result.position_y).decrypt()
-                    # 将最终结果加入列表
+                # 将序列化的结果变成密文并解密
+                dec_position_x = ts.ckks_vector_from(self.context, response.position_x).decrypt()
+                dec_position_y = ts.ckks_vector_from(self.context, response.position_y).decrypt()
+                # 将最终结果加入列表
+                for x, y in zip(dec_position_x, dec_position_y):
                     final_results.append(
-                        (round(dec_position_x[0]), round(dec_position_y[0]), result.database_id))
+                        (round(x), round(y), response.database_id))
         return final_results
