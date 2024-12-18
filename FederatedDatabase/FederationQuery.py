@@ -1,6 +1,10 @@
+import concurrent.futures
+
 import grpc
-import database_pb2, database_pb2_grpc
 import tenseal as ts
+
+import database_pb2
+import database_pb2_grpc
 
 
 class FederationQuery:
@@ -68,6 +72,26 @@ class FederationQuery:
 
         return final_results
 
+    # 定义一个处理单个数据库查询的函数
+    def query_database(self, db_stub, serialized_context, enc_query_x, enc_query_y, query_num):
+        response = db_stub.EncryptedQueryDistance(
+            database_pb2.EncryptedNearestQueryRequest(
+                context=serialized_context,  # 二进制流
+                position_x=enc_query_x,
+                position_y=enc_query_y,
+                query_num=query_num
+            )
+        )
+
+        result_list = []
+        for dis_result in response.results:
+            # 将序列化的结果变成密文并解密
+            dec_dis_result = ts.ckks_vector_from(self.context, dis_result.distance).decrypt()
+            # 将返回的距离加入列表
+            result_list.append((dec_dis_result[0], db_stub))  # 注意解密后结果为一个向量
+
+        return result_list
+
     def encrypted_nearest_query(self, query_x, query_y, query_num):
         # 序列化加密环境
         serialized_context = self.context.serialize()
@@ -78,19 +102,19 @@ class FederationQuery:
         # 创建结果列表
         distances = []
 
-        # 向每个小型数据库发送查询请求，获取k个点的距离
-        for db_stub in self.small_databases:
-            response = db_stub.EncryptedQueryDistance(
-                database_pb2.EncryptedNearestQueryRequest(
-                    context=serialized_context,  # 二进制流
-                    position_x=enc_query_x,
-                    position_y=enc_query_y,
-                    query_num=query_num))
-            for dis_result in response.results:
-                # 将序列化的结果变成密文并解密
-                dec_dis_result = ts.ckks_vector_from(self.context, dis_result.distance).decrypt()
-                # 将返回的距离加入列表
-                distances.append((dec_dis_result[0], db_stub))  # 注意解密后结果为一个向量
+        # 使用 ThreadPoolExecutor 来并行查询
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+
+            # 为每个数据库提交任务
+            for db_stub in self.small_databases:
+                futures.append(
+                    executor.submit(self.query_database, db_stub, serialized_context,
+                                    enc_query_x, enc_query_y, query_num))
+
+            # 获取所有线程的结果
+            for future in concurrent.futures.as_completed(futures):
+                distances.extend(future.result())
 
         # 根据距离排序，选择最接近的k个点
         distances.sort(key=lambda x: x[0])

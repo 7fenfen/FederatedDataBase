@@ -1,3 +1,4 @@
+import concurrent.futures
 import grpc
 from concurrent import futures
 from functools import cmp_to_key
@@ -72,6 +73,16 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
     @staticmethod
     def calculate_distance(x1, y1, x2, y2):
         return (x2 - x1) ** 2 + (y2 - y1) ** 2
+
+    # 定义一个处理单个数据的函数
+    def process_data(self, data_entry, enc_query_x, enc_query_y, context):
+        x, y, _ = data_entry
+        # 加密x, y
+        enc_x = ts.ckks_vector(context, [x])
+        enc_y = ts.ckks_vector(context, [y])
+        # 计算距离(加密后)
+        distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
+        return (distance, x, y)
 
     def QueryDistance(self, request, context):
         query_x = request.position_x
@@ -168,14 +179,16 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
         self.enc_distances = []  # 清空距离数据
         temp_distances = []
 
-        for x, y, _ in self.data:
-            # 加密x,y
-            enc_x = ts.ckks_vector(self.database_party_context, [x])
-            enc_y = ts.ckks_vector(self.database_party_context, [y])
-            # 计算距离(加密后)
-            distance = self.calculate_distance(enc_query_x, enc_query_y, enc_x, enc_y)
-            # 加入列表
-            temp_distances.append((distance, x, y))
+        # 使用 ThreadPoolExecutor 来并行计算
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = []
+            for data_entry in self.data:
+                results.append(
+                    executor.submit(self.process_data, data_entry,
+                                    enc_query_x, enc_query_y, self.database_party_context))
+            # 获取结果
+            for future in concurrent.futures.as_completed(results):
+                temp_distances.append(future.result())
 
         # 用大顶堆找出前query_num个元素
         max_heap = EncryptedMaxHeap(query_num)
@@ -208,10 +221,10 @@ class DatabaseServiceServicer(database_pb2_grpc.DatabaseServiceServicer):
 
         # 构建返回数据
         return database_pb2.EncryptedQueryResult(
-                position_x=enc_x.serialize(),
-                position_y=enc_y.serialize(),
-                database_id=self.database_id
-            )
+            position_x=enc_x.serialize(),
+            position_y=enc_y.serialize(),
+            database_id=self.database_id
+        )
 
     def CompareQuery(self, request, context):
         # 还原加密环境
