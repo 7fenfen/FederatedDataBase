@@ -68,32 +68,33 @@ python FederationTest.py
 
 ```string
 Query Type: Nearest, X:150, Y:150, QueryNum:10
-User at (142, 156) from Database 1
-User at (166, 150) from Database 1
-User at (134, 147) from Database 1
-User at (141, 164) from Database 1
-User at (153, 145) from Database 2
-User at (154, 158) from Database 2
-User at (164, 161) from Database 2
-User at (161, 158) from Database 3
-User at (138, 158) from Database 3
-User at (132, 153) from Database 3
-程序运行时间: 0.021190 秒
+User at (151, 149) from Database 1
+User at (147, 150) from Database 2
+User at (145, 150) from Database 2
+User at (145, 148) from Database 2
+User at (156, 152) from Database 2
+User at (155, 145) from Database 2
+User at (144, 145) from Database 2
+User at (146, 151) from Database 3
+User at (153, 153) from Database 3
+User at (149, 143) from Database 3
+程序运行时间: 0.012938 秒
 Query Type: AntiNearest, X:150, Y:50
-User at (145, 49) from Database 1
-程序运行时间: 1.547219 秒
+User at (151, 49) from Database 1
+User at (150, 51) from Database 3
+程序运行时间: 3.866848 秒
 Query Type: EncryptedNearest, X:150, Y:150, QueryNum:10
-User at (142, 156) from Database 1
-User at (166, 150) from Database 1
-User at (134, 147) from Database 1
-User at (141, 164) from Database 1
-User at (153, 145) from Database 2
-User at (154, 158) from Database 2
-User at (164, 161) from Database 2
-User at (161, 158) from Database 3
-User at (138, 158) from Database 3
-User at (132, 153) from Database 3
-程序运行时间: 21.325934 秒
+User at (151, 149) from Database 1
+User at (147, 150) from Database 2
+User at (145, 150) from Database 2
+User at (145, 148) from Database 2
+User at (156, 152) from Database 2
+User at (155, 145) from Database 2
+User at (144, 145) from Database 2
+User at (146, 151) from Database 3
+User at (153, 153) from Database 3
+User at (149, 143) from Database 3
+程序运行时间: 38.096181 秒
 ```
 PS:运行时间会略有不同
 
